@@ -1,0 +1,50 @@
+name: Lint and Test
+
+on:
+  pull_request:
+
+
+jobs:
+  schema_for_linting_and_testing:
+    name: Dummy print
+    runs-on: ubuntu-latest
+    steps:
+      - name: Printing
+        run: echo "Test"
+
+  lint:
+    name: Lint and Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Python 3.8
+        id: python_setup
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.8"
+
+      - name: Check Out Repository
+        id: checkout_repository
+        uses: actions/checkout@v2
+
+      - name: Installing Libraries
+        id: needed_libraries
+        run: pip install black
+
+      - uses: actions/checkout@v2
+      - name: Run Flake8 and black
+        run: |
+          echo "Running black"
+          python -m black ${GITHUB_WORKSPACE} --check --diff --verbose
+
+      - name: Installing pytest
+        id: install_pytest
+        run: pip install pytest
+
+      - uses: actions/checkout@v2
+      - name: Test
+        id: python_test
+        run: |
+          echo "Running pytest"
+          python -m pytest ${GITHUB_WORKSPACE}/tests \
+          --doctest-modules \
+          --junitxml=junit/unittest-${{ matrix.python-version }}.xml

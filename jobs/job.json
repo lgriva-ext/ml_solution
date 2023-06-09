@@ -1,0 +1,23 @@
+{
+    "name": "xx",
+    "timeout_seconds": 0,
+    "max_concurrent_runs": 1,
+    "tasks": [
+        {
+            "task_key": "preprocess",
+            "spark_python_task": {
+                "python_file": "src/test/test.py",
+                "source": "GIT"
+            },
+            "existing_cluster_id": "0531-173223-2msbjz85",
+            "timeout_seconds": 0,
+            "email_notifications": {}
+        }
+    ],
+    "git_source": {
+      "git_url": "https://github.com/lgriva-ext/ml_solution.git",
+      "git_provider": "gitHub",
+      "git_branch": "xx"
+    },
+    "format": "MULTI_TASK"
+}

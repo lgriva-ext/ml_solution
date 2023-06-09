@@ -1,0 +1,53 @@
+name: Development to Prod
+
+on:
+  push:
+    branches:
+      - main
+
+
+jobs:
+  build_and_test:
+    runs-on: ubuntu-latest
+    environment:
+      name: prod
+    env:
+      DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_PROD_TOKEN }}
+      DATABRICKS_HOST: ${{ secrets.DATABRICKS_WORKSPACE }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: setup python
+        uses: actions/setup-python@v3
+        with:
+          python-version: "3.8"
+
+      - name: pip install
+        run: |
+          python -m pip install --upgrade pip
+
+      - name: install-databricks-cli
+        uses: microsoft/install-databricks-cli@v1.0.0
+
+      # Deploy code to the prod environment
+      - name: Deploying
+        run: |
+          echo "Deploying code to prod..."
+
+      # Deploy code to the prod environment
+      # Add possibly a trigger to the deployed job
+      - name: Deploy to Prod
+        id: deploy_job
+        run: |
+          printf -v date '%(%Y-%m-%d)T\n' -1
+          databricks workspace import_dir -o $GITHUB_WORKSPACE/src /Prod/$date
+          json=$(cat $GITHUB_WORKSPACE/jobs/job.json)
+          json=$(echo $json | jq -r ".git_source.git_branch = \"main\"")
+          json=$(echo $json | jq -r ".name = \"PROD-pipeline-test-${date}\"")
+          echo "$json"
+          JOB_ID=$(databricks jobs create --json "$json" | jq -r '.job_id')
+
+        #echo "job_id=${JOB_ID}" >> $GITHUB_OUTPUT
+        #databricks jobs run-now --job-id "$JOB_ID"

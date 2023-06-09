@@ -1,0 +1,53 @@
+# name: Deploy pipeline
+
+# # This pipeline is executed when push to main, and when there are changes on .py and .yml files.
+# on:
+#   workflow_run:
+#     workflows:
+#       - "Release pipeline"
+#     types:
+#       - completed
+
+# # Environmental variables needed in scripts: Azureml credentials and compute cluster name
+# env:
+#       smdc_tenant_id: ${{ secrets.AZURE_TENANT_ID }}
+#       smdc_client_id: ${{ secrets.AZURE_CLIENT_ID }}
+#       smdc_client_secret: ${{ secrets.AZURE_CLIENT_SECRET }}
+#       compute_cluster_name: ${{ secrets.COMPUTE_CLUSTER_NAME }}
+#       subs_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+#       modeling_pipe_endpoint: ${{ secrets.MODELLING_ENDPOINT }}
+
+# jobs:
+#   deploy:
+#     if: ${{ github.event.workflow_run.conclusion == 'success' }}
+#     name: deploy-pipe
+#     runs-on: ubuntu-latest
+
+#     steps:
+#       - name: Checkout current repository
+#         uses: actions/checkout@v2
+
+#       - name: setup python
+#         uses: actions/setup-python@v2
+#         with:
+#           python-version: "3.8"
+
+#       # Install azureml-sdk package
+#       #- name: downgrade pip
+#       #  run: python -m pip install pip==20.2.4
+
+#       # Install azureml-sdk package
+#       - name: pip install
+#         run: |
+#           python -m pip install --upgrade pip setuptools wheel
+#           pip install --no-cache-dir -r pipelines/req2.txt
+
+#       - name: Post action
+#         run: python pipelines/post_modeling_endpoint.py
+
+#       - name: Deploy Model
+#         run: python pipelines/deploy_pipeline.py
+
+#       # Printing scoring_uri
+#       - name: echoing scoring_uri
+#         run: echo "scoring uri is ${{ env.SCORING_URI }}"
