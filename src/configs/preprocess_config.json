@@ -1,0 +1,14 @@
+{
+    "prod_no_aplica": [
+        "Household",
+        "Health and Hygiene",
+        "Hard Drinks",
+        "Soft Drinks",
+        "Fruits and Vegetables"
+    ],
+    "tiendas": [
+        "OUT010",
+        "OUT017",
+        "OUT045"
+    ]
+}

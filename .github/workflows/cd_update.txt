@@ -1,0 +1,52 @@
+# name: Release pipeline
+
+# # This pipeline is executed when push to main, and when there are changes on .py and .yml files.
+# on:
+#   push:
+#     branches:
+#       - "main"
+
+
+#   schedule:
+#   # Schedule to run 1st day of each month.
+#     - cron: "0 0 1 * *"
+
+
+# # Environmental variables needed in scripts: Azureml credentials and compute cluster name
+# env:
+#       smdc_tenant_id: ${{ secrets.AZURE_TENANT_ID }}
+#       smdc_client_id: ${{ secrets.AZURE_CLIENT_ID }}
+#       smdc_client_secret: ${{ secrets.AZURE_CLIENT_SECRET }}
+#       compute_cluster_name: ${{ secrets.COMPUTE_CLUSTER_NAME }}
+#       subs_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+# jobs:
+#   train_model:
+#     runs-on: ubuntu-latest
+
+#     steps:
+#     - name: check out repo
+#       uses: actions/checkout@v2
+
+#     - name: setup python
+#       uses: actions/setup-python@v2
+#       with:
+#         python-version: "3.8"
+
+#     # Install azureml-sdk package
+#     #- name: downgrade pip
+#     #  run: python -m pip install pip==20.2.4
+
+#     # Install azureml-sdk package
+#     - name: pip install
+#       run: |
+#         python -m pip install --upgrade pip setuptools wheel
+#         pip install --no-cache-dir -r pipelines/req2.txt
+
+#     # Run modelling_pipeline
+#     - name: run workflow
+#       run: python pipelines/modelling_pipeline.py
+
+#     # Print logs from feat_eng, modelling and evaluation
+#     #- name: printing logs
+#     #  run: cat std_log.txt

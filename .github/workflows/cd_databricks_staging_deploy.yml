@@ -1,0 +1,105 @@
+name: Deploy to Staging
+
+on:
+  pull_request:
+    branches:
+      - staging
+
+
+jobs:
+  build_and_test:
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+    env:
+      DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_STAGING_TOKEN }}
+      DATABRICKS_CLUSTER_ID: ${{ secrets.DATABRICKS_CLUSTER_ID }}
+      DATABRICKS_HOST: ${{ secrets.DATABRICKS_WORKSPACE }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: setup python
+        uses: actions/setup-python@v3
+        with:
+          python-version: "3.8"
+
+      - name: pip install
+        run: |
+          python -m pip install --upgrade pip
+
+      - name: install-databricks-cli
+        uses: microsoft/install-databricks-cli@v1.0.0
+
+      # If this workflow run
+      - name: Accept stage change requested
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.stageChangeRequested == 'true'}}
+        env:
+          MODEL_REGISTRY_TOKEN: ${{ secrets.DATABRICKS_MODEL_REGISTRY_TOKEN }}
+          MODEL_REGISTRY_HOST: ${{ secrets.DATABRICKS_MODEL_REGISTRY_WORKSPACE }}
+        run: |
+          echo "accepting model transition to: staging"
+          python ${GITHUB_WORKSPACE}/jobs/job_approver.py \
+            ${{ inputs.modelName }} \
+            ${{ inputs.modelVersion }} \
+            ${{ inputs.toStage }}
+
+      - name: Extract branch name
+        run: |
+          echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
+          echo "${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}"
+        id: extract_branch
+
+      # Deploy code to the staging environment
+      - name: Deploying
+        run: |
+          echo "Deploying code to staging..."
+
+      # Deploy code to the staging environment
+      # Inside the job running we need to use the available
+      # model in Staging stage!!
+      - name: Deploy to Staging
+        id: deploy_job
+        run: |
+          printf -v date '%(%Y-%m-%d)T' -1
+          databricks workspace import_dir -o $GITHUB_WORKSPACE/src /Staging/$date
+          json=$(cat $GITHUB_WORKSPACE/jobs/pipeline_job.json)
+          json=$(echo $json | jq -r ".git_source.git_branch = \"${{ steps.extract_branch.outputs.branch }}\"")
+          json=$(echo $json | jq -r ".name = \"QA-pipeline-test-${date}\"")
+          json=$(echo $json | jq -r ".schedule.quartz_cron_expression = \"36 26 10 * * ?\"")
+          echo "$json"
+          JOB_ID=$(databricks jobs create --json "$json" | jq -r '.job_id')
+          echo "job_id=${JOB_ID}" >> $GITHUB_OUTPUT
+          databricks jobs run-now --job-id "$JOB_ID"
+
+      - name: Check run state
+        id: check_state
+        run: echo "$(python ${GITHUB_WORKSPACE}/jobs/job_waiter.py ${{ steps.deploy_job.outputs.job_id }})" >> $GITHUB_OUTPUT
+
+      - name: Downgrade model stage
+        if: ${{ steps.check_state.outputs.state == 'FAILED' && github.event_name == 'workflow_dispatch'}}
+        env:
+            MODEL_REGISTRY_TOKEN: ${{ secrets.DATABRICKS_MODEL_REGISTRY_TOKEN }}
+            MODEL_REGISTRY_HOST: ${{ secrets.DATABRICKS_MODEL_REGISTRY_WORKSPACE }}
+        run: |
+          echo "downgrade model stage to None, again"
+          python ${GITHUB_WORKSPACE}/jobs/job_downgrader.py \
+            ${{ inputs.modelName }} \
+            ${{ inputs.modelVersion }}
+
+      - name: Fail or approve workflow
+        if: ${{ steps.check_state.outputs.state == 'FAILED' }}
+        run: exit 1
+
+      # Request a stage change from Staging to Production
+      - name: Request staging to prod model stage change
+        env:
+            MODEL_REGISTRY_TOKEN: ${{ secrets.DATABRICKS_MODEL_REGISTRY_TOKEN }}
+            MODEL_REGISTRY_HOST: ${{ secrets.DATABRICKS_MODEL_REGISTRY_WORKSPACE }}
+        run: |
+          model_name=$(cat $GITHUB_WORKSPACE/jobs/current_model.json | jq -r '.current_model_name')
+          python ${GITHUB_WORKSPACE}/jobs/job_requester.py ${model_name}
+
+      - name: Run succesfully
+        run: echo "going to production environment"

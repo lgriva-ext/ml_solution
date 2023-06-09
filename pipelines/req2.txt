@@ -1,0 +1,8 @@
+azure-storage-blob==12.3.2
+azureml-automl-core==1.49.0
+azureml-core==1.49.0
+azureml-dataset-runtime==1.49.0
+azureml-pipeline-core==1.49.0
+azureml-train-core==1.49.0
+azureml-pipeline-steps==1.49.0
+azureml-train-automl-client==1.49.0
