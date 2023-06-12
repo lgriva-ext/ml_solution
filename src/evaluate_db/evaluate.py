@@ -33,7 +33,7 @@ def promote_to_staging(name, version):
     }
 
     resp = requests.post(
-        f'{dbutils.secrets.get(scope="modelregistery", key="modelregistery-host")}api/2.0/mlflow/databricks/model-versions/transition-stage',
+        f'{dbutils.secrets.get(scope="modelregistery", key="modelregistery-host")}api/2.0/mlflow/transition-requests/approve',
         json=job_payload,
         headers={
             "Authorization": f'Bearer {dbutils.secrets.get(scope="modelregistery", key="modelregistery-token")}'
@@ -123,13 +123,9 @@ if __name__ == "__main__":
         # Run compliance checks before approve "to Staging" transition
         print("Running compliance checks")
         if compliance_checks_approved(model_name, model_version):
-            print(
-                f"Promoting model {model_name}, version {model_version} to Staging"
-            )
+            print(f"Promoting model {model_name}, version {model_version} to Staging")
             promote_to_staging(model_name, model_version)
-            print(
-                "Test registered model against last production registered model"
-            )
+            print("Test registered model against last production registered model")
             to_prod_stage = test_against_current_production(model_name, model_version)
             if to_prod_stage:
                 request_to_prod_transition(model_name, model_version)

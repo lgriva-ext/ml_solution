@@ -53,10 +53,13 @@ if __name__ == "__main__":
                 list_model_in_prod_cretion.append(elem["creation_timestamp"])
 
         if list_model_in_prod_cretion != []:
+            print("One or more models in production founded")
             index_last_model = list_model_in_prod_cretion.index(
                 max(list_model_in_prod_cretion)
             )
 
             for ix, elem in enumerate(list_model_in_prod_versions):
-                if ix != index_last_model:
-                    archived_model(model_name, elem)
+                # if ix != index_last_model:
+                archived_model(model_name, elem)
+
+        # promote_to_production(model_name, model_version)
