@@ -20,14 +20,21 @@ jobs:
       steps:
         - name: Checkout code
           uses: actions/checkout@v3
+          with:
+            fetch-depth: 0
+
+        - name: Get tag name
+          id: tag_name
+          run: |
+            version_number=$(git describe --tags `git rev-list --tags --max-count=1`)
+            version_number=$(echo $version_number | tr -d ' ')
+            version_number="${version_number:1}"
+            echo "tag-version=v${version_number}" >> $GITHUB_OUTPUT
 
         - name: Create Release
           id: create_release
-          #uses: actions/create-release@v1
           uses: ncipollo/release-action@v1
           env:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           with:
-            tag: ${{ github.ref }}
-            draft: false
-            prerelease: false
+            name: Release ${{ steps.tag_name.outputs.tag-version }}
