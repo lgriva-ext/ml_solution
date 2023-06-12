@@ -2,8 +2,11 @@ name: Workflow on Release
 
 
 on:
-  release:
-    types: [created, published, released]
+  push:
+    branches:
+        - "release/v*"
+  #release:
+  #  types: [created, published, released]
 
 
 jobs:
@@ -57,15 +60,23 @@ jobs:
         if: ${{ env.JOB_ID_SECRET != '' }}
         run: python $GITHUB_WORKSPACE/jobs/job_pause.py ${{ secrets.JOB_ID_ACTIVE_PROD_JOB }}
 
+      - name: Get tag name
+        id: tag_name
+        run: |
+          version_number=$(git describe --tags `git rev-list --tags --max-count=1`)
+          version_number=$(echo $version_number | tr -d ' ')
+          version_number="${version_number:1}"
+          echo "tag-version=v${version_number}" >> $GITHUB_OUTPUT
+
       # Deploy code to the prod environment
       - name: Deploy to Production
         id: deploy_job
         run: |
           printf -v date '%(%Y-%m-%d)T' -1
-          databricks workspace import_dir -o $GITHUB_WORKSPACE /Prod/${{ github.event.release.name }}/$date
+          databricks workspace import_dir -o $GITHUB_WORKSPACE /Prod/Release-${{ steps.tag_name.outputs.tag-version }}/$date
           json=$(cat $GITHUB_WORKSPACE/jobs/pipeline_job.json)
           json=$(echo $json | jq -r ".git_source.git_branch = \"${{ steps.extract_branch.outputs.branch }}\"")
-          json=$(echo $json | jq -r ".name = \"PROD-pipeline-${{ github.event.release.name }}\"")
+          json=$(echo $json | jq -r ".name = \"PROD-pipeline-${{ steps.tag_name.outputs.tag-version }}\"")
           json=$(echo $json | jq -r ".schedule.quartz_cron_expression = \"36 26 10 * * ?\"")
           echo "$json"
           JOB_ID=$(databricks jobs create --json "$json" | jq -r '.job_id')
@@ -76,3 +87,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.MY_GITHUB_SECRET }}
         run: python $GITHUB_WORKSPACE/jobs/set_secret.py ${{ steps.deploy_job.outputs.job_id }}
+
+      # Delete recently created release branch
+      - name: Delete release branch
+        run: git push origin -d release/v${{ steps.tag_name.outputs.tag-version }}
