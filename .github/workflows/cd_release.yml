@@ -2,7 +2,6 @@ name: Workflow on Release
 
 
 on:
-  workflow_dispatch:
   release:
     types: [created, published, released]
 
@@ -71,7 +70,6 @@ jobs:
           echo "$json"
           JOB_ID=$(databricks jobs create --json "$json" | jq -r '.job_id')
           echo "job_id=${JOB_ID}" >> $GITHUB_OUTPUT
-        #databricks jobs run-now --job-id "$JOB_ID"
 
       # Set new secret for prod pipeline id
       - name: Set job_id secret
