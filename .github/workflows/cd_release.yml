@@ -94,4 +94,4 @@ jobs:
 
       # Delete recently created release branch
       - name: Delete release branch
-        run: git push origin -d release/v${{ steps.tag_name.outputs.tag-version }}
+        run: git push origin -d release/${{ steps.tag_name.outputs.tag-version }}
