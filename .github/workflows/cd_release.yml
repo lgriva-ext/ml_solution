@@ -71,10 +71,10 @@ jobs:
           echo "$json"
           JOB_ID=$(databricks jobs create --json "$json" | jq -r '.job_id')
           echo "job_id=${JOB_ID}" >> $GITHUB_OUTPUT
-          databricks jobs run-now --job-id "$JOB_ID"
+        #databricks jobs run-now --job-id "$JOB_ID"
 
       # Set new secret for prod pipeline id
       - name: Set job_id secret
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.MY_GITHUB_SECRET }}
         run: python $GITHUB_WORKSPACE/jobs/set_secret.py ${{ steps.deploy_job.outputs.job_id }}
