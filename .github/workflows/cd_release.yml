@@ -4,8 +4,7 @@ name: Workflow on Release
 on:
   workflow_dispatch:
   release:
-    types:
-        - "released"
+    types: [created, published, released]
 
 
 jobs:
