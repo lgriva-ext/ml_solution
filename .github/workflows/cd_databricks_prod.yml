@@ -38,3 +38,8 @@ jobs:
             GITHUB_TOKEN: ${{ secrets.MY_GITHUB_SECRET }}
           with:
             name: Release ${{ steps.tag_name.outputs.tag-version }}
+
+        - name: Create Release Branch
+          run: |
+            git checkout -b release/${{ steps.tag_name.outputs.tag-version }}
+            git push origin release/${{ steps.tag_name.outputs.tag-version }}
