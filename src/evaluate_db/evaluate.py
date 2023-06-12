@@ -121,23 +121,23 @@ def archived_model(name, version):
 if __name__ == "__main__":
     if choosen_env == "staging":
         # Run compliance checks before approve "to Staging" transition
-        logging.info("Running compliance checks")
+        print("Running compliance checks")
         if compliance_checks_approved(model_name, model_version):
-            logging.info(
+            print(
                 f"Promoting model {model_name}, version {model_version} to Staging"
             )
             promote_to_staging(model_name, model_version)
-            logging.info(
+            print(
                 "Test registered model against last production registered model"
             )
             to_prod_stage = test_against_current_production(model_name, model_version)
             if to_prod_stage:
                 request_to_prod_transition(model_name, model_version)
             else:
-                logging.info(
+                print(
                     "Model accuracy is not better than current production model accuracy, it will be archived"
                 )
                 archived_model(model_name, model_version)
         else:
-            logging.info("Model did not pass compliance checks, it will be archived")
+            print("Model did not pass compliance checks, it will be archived")
             archived_model(model_name, model_version)
