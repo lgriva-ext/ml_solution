@@ -30,6 +30,7 @@ def archived_model(name, version):
     )
 
     print(resp.status_code)
+    print(resp.text)
 
 
 if __name__ == "__main__":
@@ -52,11 +53,12 @@ if __name__ == "__main__":
                 # list_model_in_staging_cretion.append(elem["last_updated_timestamp"])
                 list_model_in_prod_cretion.append(elem["creation_timestamp"])
 
-        if list_model_in_prod_cretion != []:
+        if list_model_in_prod_versions != []:
             print("One or more models in production founded")
 
             for ix, elem in enumerate(list_model_in_prod_versions):
                 # if ix != index_last_model:
+                print(model_name, elem)
                 archived_model(model_name, elem)
 
         # promote_to_production(model_name, model_version)
