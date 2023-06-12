@@ -18,6 +18,7 @@ def archived_model(name, version):
         "name": name,
         "version": version,
         "stage": "Archived",
+        "archive_existing_versions": False,
         "comment": "Staging version of this model",
     }
 
