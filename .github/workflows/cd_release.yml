@@ -4,7 +4,7 @@ name: Workflow on Release
 on:
   push:
     branches:
-        - "release/v*"
+        - "release/v**"
   #release:
   #  types: [created, published, released]
 
