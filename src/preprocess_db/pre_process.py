@@ -1,7 +1,7 @@
 import json
 import argparse
 import os
-from datetime import datetime
+from datetime import date
 import pandas as pd
 import logging
 from databricks import feature_store
@@ -211,9 +211,12 @@ if __name__ == "__main__":
     df_train_schema = df_train.schema
     df_test_schema = df_test.schema
 
-    uid = json.loads(
+    uuid = json.loads(
         dbutils.notebook.entry_point.getDbutils().notebook().getContext().toJson()
     )["tags"]["jobId"]
+    ddate = str(date.today()).replace("-", "_")
+    uid = f"{uuid}_{ddate}"
+
     fs.create_table(
         name="train_data_preprocessed_" + uid,
         df=df_train,
