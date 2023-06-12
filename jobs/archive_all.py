@@ -51,8 +51,11 @@ if choosen_env == "production":
             # list_model_in_staging_cretion.append(elem["last_updated_timestamp"])
             list_model_in_prod_cretion.append(elem["creation_timestamp"])
 
-    index_last_model = list_model_in_prod_cretion.index(max(list_model_in_prod_cretion))
+    if list_model_in_prod_cretion != []:
+        index_last_model = list_model_in_prod_cretion.index(
+            max(list_model_in_prod_cretion)
+        )
 
-    for ix, elem in enumerate(list_model_in_prod_versions):
-        if ix != index_last_model:
-            archived_model(model_name, elem)
+        for ix, elem in enumerate(list_model_in_prod_versions):
+            if ix != index_last_model:
+                archived_model(model_name, elem)

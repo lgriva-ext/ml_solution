@@ -37,21 +37,6 @@
                 "existing_cluster_id": "0531-173223-2msbjz85",
                 "timeout_seconds": 0,
                 "email_notifications": {}
-            },
-            {
-                "task_key": "test_new_model",
-                "depends_on": [
-                    {
-                        "task_key": "train"
-                    }
-                ],
-                "spark_python_task": {
-                    "python_file": "src/evaluate_db/evaluate.py",
-                    "source": "GIT"
-                },
-                "existing_cluster_id": "0531-173223-2msbjz85",
-                "timeout_seconds": 0,
-                "email_notifications": {}
             }
         ],
         "git_source": {

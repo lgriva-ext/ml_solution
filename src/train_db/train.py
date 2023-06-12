@@ -73,7 +73,9 @@ def request_transition_to_staging(name, version):
     resp = requests.post(
         f'{dbutils.secrets.get(scope="modelregistery", key="modelregistery-host")}api/2.0/mlflow/transition-requests/create',
         json=job_payload,
-        headers={"Authorization": f'Bearer {dbutils.secrets.get(scope="modelregistery", key="modelregistery-token")}'},
+        headers={
+            "Authorization": f'Bearer {dbutils.secrets.get(scope="modelregistery", key="modelregistery-token")}'
+        },
     )
 
     print(resp.status_code)

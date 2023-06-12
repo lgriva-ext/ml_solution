@@ -62,15 +62,22 @@ def load_current_production_model(model_name):
             # list_model_in_staging_cretion.append(elem["last_updated_timestamp"])
             list_model_in_prod_cretion.append(elem["creation_timestamp"])
 
-    index_last_model = list_model_in_prod_cretion.index(max(list_model_in_prod_cretion))
-    last_model_version = list_model_in_prod_versions[index_last_model]
+    if list_model_in_prod_cretion != []:
+        index_last_model = list_model_in_prod_cretion.index(
+            max(list_model_in_prod_cretion)
+        )
+        last_model_version = list_model_in_prod_versions[index_last_model]
 
-    return last_model_version
+        return last_model_version
+    else:
+        return "x"
 
 
 def test_against_current_production(model_name, model_version):
     model = load_current_production_model(model_name)
-    pass
+    if model == "x":
+        print("First production model trained")
+    return True
 
 
 def request_to_prod_transition(name, version):
