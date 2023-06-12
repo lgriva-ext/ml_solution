@@ -54,9 +54,6 @@ if __name__ == "__main__":
 
         if list_model_in_prod_cretion != []:
             print("One or more models in production founded")
-            index_last_model = list_model_in_prod_cretion.index(
-                max(list_model_in_prod_cretion)
-            )
 
             for ix, elem in enumerate(list_model_in_prod_versions):
                 # if ix != index_last_model:
