@@ -16,6 +16,8 @@ jobs:
         contents: write
         issues: write
         pull-requests: write
+        deployments: write
+        actions: write
       environment:
         name: prod
       env:
