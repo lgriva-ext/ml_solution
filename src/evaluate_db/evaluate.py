@@ -112,29 +112,6 @@ def archived_model(name, version):
 
 
 if choosen_env == "staging":
-    """
-    # Call github from databrick job
-
-    job_payload = {
-        "ref": "main",
-        "inputs": {
-            "choosenEnv": choosen_env,
-            "stageChangeRequested": "true",
-            "modelName": model_name,
-            "modelVersion": model_version,
-            "toStage": to_stage,
-        },
-    }
-    resp = requests.post(
-        "https://api.github.com/repos/lgriva-ext/ml_solution/actions/workflows/cd_databricks_staging.yml/dispatches",
-        json=job_payload,
-        headers={
-            "Authorization": f'Bearer {dbutils.secrets.get(scope="github", key="github-token")}'
-        },
-    )
-
-    print(resp.status_code)
-    """
     # Run compliance checks before approve "to Staging" transition
     logging.info("Running compliance checks")
     if compliance_checks_approved(model_name, model_version):

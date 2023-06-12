@@ -1,6 +1,7 @@
 """_summary_
 """
 import requests
+from datetime import date
 import os
 import pandas as pd
 from sklearn.model_selection import train_test_split, cross_validate, cross_val_score
@@ -15,9 +16,13 @@ from pyspark.sql.functions import monotonically_increasing_id
 
 registry_uri = f"databricks://modelregistery:modelregistery"
 mlflow.set_registry_uri(registry_uri)
-uid = json.loads(
+
+uuid = json.loads(
     dbutils.notebook.entry_point.getDbutils().notebook().getContext().toJson()
 )["tags"]["jobId"]
+ddate = str(date.today()).replace("-", "_")
+uid = f"{uuid}_{ddate}"
+
 mlflow.set_experiment(f"/Shared//test_training_{uid}")
 
 feature_store_uri = f"databricks://featurestore:featurestore"
@@ -52,6 +57,23 @@ def transition_to_staging(name, version):
         headers={
             "Authorization": f'Bearer {dbutils.secrets.get(scope="modelregistery", key="modelregistery-token")}'
         },
+    )
+
+    print(resp.status_code)
+
+
+def request_transition_to_staging(name, version):
+    job_payload = {
+        "name": name,
+        "version": version,
+        "stage": "Staging",
+        "comment": "Staging version of this model",
+    }
+
+    resp = requests.post(
+        f'{os.getenv("MODEL_REGISTRY_HOST")}/api/2.0/mlflow/transition-requests/create',
+        json=job_payload,
+        headers={"Authorization": f'Bearer {os.getenv("MODEL_REGISTRY_TOKEN")}'},
     )
 
     print(resp.status_code)
@@ -135,6 +157,7 @@ if __name__ == "__main__":
         description="raw test bigmart features",
     )
 
-    transition_to_staging(model_details.name, model_details.version)
+    # transition_to_staging(model_details.name, model_details.version)
+    request_transition_to_staging(model_details.name, model_details.version)
 
     print("Finished Training")

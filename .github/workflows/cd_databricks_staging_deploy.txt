@@ -10,7 +10,7 @@ jobs:
   build_and_test:
     runs-on: ubuntu-latest
     environment:
-      name: staging
+      name: prod
     env:
       DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_STAGING_TOKEN }}
       DATABRICKS_CLUSTER_ID: ${{ secrets.DATABRICKS_CLUSTER_ID }}

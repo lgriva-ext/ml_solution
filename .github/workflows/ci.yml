@@ -1,13 +1,18 @@
 name: Lint and Test
 
+
 on:
   pull_request:
+    branches:
+      - main
 
 
 jobs:
   schema_for_linting_and_testing:
     name: Dummy print
     runs-on: ubuntu-latest
+    environment:
+      name: staging
     steps:
       - name: Printing
         run: echo "Test"
@@ -15,6 +20,8 @@ jobs:
   lint:
     name: Lint and Test
     runs-on: ubuntu-latest
+    environment:
+      name: staging
     steps:
       - name: Set up Python 3.8
         id: python_setup
@@ -24,7 +31,7 @@ jobs:
 
       - name: Check Out Repository
         id: checkout_repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Installing Libraries
         id: needed_libraries
@@ -41,10 +48,19 @@ jobs:
         run: pip install pytest
 
       - uses: actions/checkout@v2
-      - name: Test
-        id: python_test
+      - name: Unit Tests
+        id: python_unit_tests
         run: |
           echo "Running pytest"
-          python -m pytest ${GITHUB_WORKSPACE}/tests \
+          python -m pytest ${GITHUB_WORKSPACE}/tests/unit_tests \
+          --doctest-modules \
+          --junitxml=junit/unittest-${{ matrix.python-version }}.xml
+
+      - uses: actions/checkout@v2
+      - name: Integration Tests
+        id: python_integration_tests
+        run: |
+          echo "Running pytest"
+          python -m pytest ${GITHUB_WORKSPACE}/tests/integration_tests \
           --doctest-modules \
           --junitxml=junit/unittest-${{ matrix.python-version }}.xml
