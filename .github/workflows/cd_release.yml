@@ -2,15 +2,15 @@ name: Workflow on Release
 
 
 on:
-  push:
-    branches:
-        - "release/v**"
-  #release:
-  #  types: [created, published, released]
+  workflow_run:
+    workflows: [Creating Release]
+    types:
+      - completed
 
 
 jobs:
     publish_updated_job:
+      if: ${{ github.event.workflow_run.conclusion == 'success' }}
       runs-on: ubuntu-latest
       permissions:
         contents: write
