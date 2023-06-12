@@ -32,7 +32,7 @@ def archived_model(name, version):
     print(resp.status_code)
 
 
-if choosen_env == "Production":
+if choosen_env == "production":
     job_payload = {"filter": f"name='{model_name}'"}
 
     resp = requests.get(
