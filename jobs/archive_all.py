@@ -87,7 +87,7 @@ def create_or_update_ep(model_name, model_version):
     if resp.status_code == 400:
         if json.loads(resp.text)["error_code"] == "RESOURCE_ALREADY_EXISTS":
             resp = requests.put(
-                f"{dbutils.secrets.get(scope='prodenv', key='prodenv-host')}api/2.0/serving-endpoints",
+                f"{dbutils.secrets.get(scope='prodenv', key='prodenv-host')}api/2.0/serving-endpoints/{endpoint_name}/config",
                 json=config,
                 headers=headers,
             )
