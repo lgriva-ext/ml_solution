@@ -67,11 +67,10 @@ jobs:
       - name: Get tag name
         id: tag_name
         run: |
-          versions_number=$(git describe --tags `git rev-list --tags --max-count=2`)
-          tag-version=$(echo $versions_number | cut -d" " -f1)
-          last-version=$(echo $versions_number | cut -d" " -f2)
-          echo "tag-version=${tag-version}" >> $GITHUB_OUTPUT
-          echo "last-version=${last-version}" >> $GITHUB_OUTPUT
+          version_number=$(git describe --tags `git rev-list --tags --max-count=1`)
+          version_number=$(echo $version_number | tr -d ' ')
+          version_number="${version_number:1}"
+          echo "tag-version=v${version_number}" >> $GITHUB_OUTPUT
 
       # Deploy code to the prod environment
       - name: Deploy to Production
