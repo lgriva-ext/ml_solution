@@ -39,7 +39,8 @@ def promote_to_production(name, version):
         "name": name,
         "version": version,
         "stage": "Production",
-        "archive_existing_versions": False,
+        # "archive_existing_versions": False,
+        "archive_existing_versions": True,
         "comment": "Staging version of this model",
     }
 
@@ -80,7 +81,7 @@ def create_or_update_ep(model_name, model_version):
         headers=headers,
     )
 
-    if json.status_code == 400:
+    if resp.status_code == 400:
         if json.loads(resp.text)["error_code"] == "RESOURCE_ALREADY_EXISTS":
             resp = requests.put(
                 f"{dbutils.secrets.get(scope='prodenv', key='prodenv-host')}api/2.0/serving-endpoints",
@@ -117,7 +118,7 @@ if __name__ == "__main__":
             for ix, elem in enumerate(list_model_in_prod_versions):
                 # if ix != index_last_model:
                 print(model_name, elem)
-                archived_model(model_name, elem)
+                # archived_model(model_name, elem)
 
         promote_to_production(model_name, model_version)
 
