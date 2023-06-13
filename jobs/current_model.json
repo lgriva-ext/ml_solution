@@ -1,3 +1,4 @@
 {
-    "current_model_name": "test_model"
+    "current_model_name": "test_model",
+    "current_endpoint_name": "test_model_ep"
 }

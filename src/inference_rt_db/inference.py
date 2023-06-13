@@ -1,24 +1,36 @@
-import json
-import argparse
 import os
-from datetime import date
+import requests
+import numpy as np
 import pandas as pd
-import logging
-from databricks import feature_store
-from pyspark.sql.functions import monotonically_increasing_id
+import json
 
 
-feature_store_uri = f"databricks://featurestore:featurestore"
-fs = feature_store.FeatureStoreClient(feature_store_uri=feature_store_uri)
-ds_name = "ds_test"
-logging.info("Pre-processing data.")
+def create_tf_serving_json(data):
+    return {
+        "inputs": {name: data[name].tolist() for name in data.keys()}
+        if isinstance(data, dict)
+        else data.tolist()
+    }
 
 
-def addIdColumn(dataframe, id_column_name):
-    """Add id column to dataframe"""
-    columns = dataframe.columns
-    new_df = dataframe.withColumn(id_column_name, monotonically_increasing_id())
-    return new_df[[id_column_name] + columns]
+def score_model(dataset):
+    url = f'{os.getenv("DATABRICKS_HOST")}/serving-endpoints/test_model_ep/invocations'
+    headers = {
+        "Authorization": f'Bearer {os.environ.get("DATABRICKS_TOKEN")}',
+        "Content-Type": "application/json",
+    }
+    ds_dict = (
+        {"dataframe_split": dataset.to_dict(orient="split")}
+        if isinstance(dataset, pd.DataFrame)
+        else create_tf_serving_json(dataset)
+    )
+    data_json = json.dumps(ds_dict, allow_nan=True)
+    response = requests.request(method="POST", headers=headers, url=url, data=data_json)
+    if response.status_code != 200:
+        raise Exception(
+            f"Request failed with status {response.status_code}, {response.text}"
+        )
+    return response.json()
 
 
 def switcher(x, cuts):
@@ -186,52 +198,4 @@ def preprocess_feat_eng(df, train=True, dict_mode=None, cuts=None):
 
 
 if __name__ == "__main__":
-    # La versión puede ser un parámetro también... entonces va a descargar la carpeta con esa versión de datos
-
-    # Supongo que los datasets de train y test van a guardarse por un proceso de ETL por separado en una misma carpeta en el blob storage default.
-    # A su vez hay allí guardado un par de archivos que contienen los productos a los cuales no aplica el Fat_Content, las tiendas para las cuales
-    # se usará por defecto el tamaño 'Small'.
-
-    aux_path = "/".join(os.getcwd().split("/")[:-1])
-    config_path = f"{aux_path}/configs"
-
-    df_train = fs.read_table("train_data_raw").toPandas()
-    df_train = df_train[[c for c in df_train.columns if c != "item_id"]]
-    df_test = fs.read_table("test_data_raw").toPandas()
-    df_test = df_test[[c for c in df_test.columns if c != "item_id"]]
-
-    df_train, dict_mode, l = preprocess_feat_eng(df_train)
-    df_test, dict_mode, l = preprocess_feat_eng(df_test, False, dict_mode, l)
-
-    df_train = spark.createDataFrame(df_train)
-    df_test = spark.createDataFrame(df_test)
-
-    df_train = addIdColumn(df_train, "item_id")
-    df_test = addIdColumn(df_test, "item_id")
-    df_train_schema = df_train.schema
-    df_test_schema = df_test.schema
-
-    uuid = json.loads(
-        dbutils.notebook.entry_point.getDbutils().notebook().getContext().toJson()
-    )["tags"]["jobId"]
-    ddate = str(date.today()).replace("-", "_")
-    uid = f"{uuid}_{ddate}"
-
-    fs.create_table(
-        name="train_data_preprocessed_" + uid,
-        # df=df_train,
-        primary_keys=["item_id"],
-        schema=df_train_schema,
-        description="raw train bigmart features",
-    )
-    fs.write_table(name="train_data_preprocessed_" + uid, df=df_train, mode="overwrite")
-    fs.create_table(
-        name="test_data_preprocessed_" + uid,
-        # df=df_test,
-        primary_keys=["item_id"],
-        schema=df_test_schema,
-        description="raw test bigmart features",
-    )
-    fs.write_table(name="test_data_preprocessed_" + uid, df=df_test, mode="overwrite")
-
-    logging.info("Finished Preprocessing")
+    print(score_model(dataset))
