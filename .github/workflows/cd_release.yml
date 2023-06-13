@@ -67,10 +67,11 @@ jobs:
       - name: Get tag name
         id: tag_name
         run: |
-          version_number=$(git describe --tags `git rev-list --tags --max-count=1`)
-          version_number=$(echo $version_number | tr -d ' ')
-          version_number="${version_number:1}"
-          echo "tag-version=v${version_number}" >> $GITHUB_OUTPUT
+          versions_number=$(git describe --tags `git rev-list --tags --max-count=2`)
+          tag-version=$(echo $versions_number | cut -d" " -f1)
+          last-version=$(echo $versions_number | cut -d" " -f2)
+          echo "tag-version=${tag-version}" >> $GITHUB_OUTPUT
+          echo "last-version=${last-version}" >> $GITHUB_OUTPUT
 
       # Deploy code to the prod environment
       - name: Deploy to Production
@@ -79,7 +80,7 @@ jobs:
           printf -v date '%(%Y-%m-%d)T' -1
           databricks workspace import_dir -o $GITHUB_WORKSPACE /Prod/Release-${{ steps.tag_name.outputs.tag-version }}/$date
           json=$(cat $GITHUB_WORKSPACE/jobs/pipeline_job.json)
-          json=$(echo $json | jq -r ".git_source.git_branch = \"${{ steps.extract_branch.outputs.branch }}\"")
+          json=$(echo $json | jq -r ".git_source.git_tag = \"${{ steps.tag_name.outputs.tag-version }}\"")
           json=$(echo $json | jq -r ".name = \"PROD-pipeline-${{ steps.tag_name.outputs.tag-version }}\"")
           json=$(echo $json | jq -r ".schedule.quartz_cron_expression = \"36 26 10 * * ?\"")
           echo "$json"
