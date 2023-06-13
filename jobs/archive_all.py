@@ -81,6 +81,9 @@ def create_or_update_ep(model_name, model_version):
         headers=headers,
     )
 
+    print(resp.status_code)
+    print(resp.text)
+
     if resp.status_code == 400:
         if json.loads(resp.text)["error_code"] == "RESOURCE_ALREADY_EXISTS":
             resp = requests.put(
@@ -90,6 +93,7 @@ def create_or_update_ep(model_name, model_version):
             )
 
     print(resp.status_code)
+    print(resp.text)
 
 
 if __name__ == "__main__":
