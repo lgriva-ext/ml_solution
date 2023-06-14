@@ -2,9 +2,12 @@
 """
 import pytest
 from datetime import datetime
+import pandas as pd
 import numpy as np
 import mlflow
 from src.train_db import train
+from src.preprocess_db import pre_process
+from databricks import feature_store
 
 
 def test_integration_w_model_registry():
@@ -24,7 +27,17 @@ def test_integration_w_model_registry():
 
 def test_xx():
     # Check if feature storing some features then will bring me access to they
-    pass
+    fs = feature_store.FeatureStoreClient()
+    df = pd.DataFrame(data=[np.array(range(500))], columns=["x"])
+    df.loc[:, "y"] = np.array(range(500,1000)).tolist()
+    df.reset_index(inplace=True)
+    df.rename(columns={"index": "item_id"}, inplace=True)
+    df = spark.createDataFrame(df)
+    pre_process.write_preprocessed_data_to_fs(fs, "test", df)
+    dff = fs.read_table("test").toPandas()
+    assert dff.shape == df.shape
+    for c in df.columns:
+        assert c in dff.columns
 
 
 def test_y():

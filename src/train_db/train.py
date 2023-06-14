@@ -14,28 +14,29 @@ from databricks import feature_store
 from pyspark.sql.functions import monotonically_increasing_id
 
 
-registry_uri = f"databricks://modelregistery:modelregistery"
-mlflow.set_registry_uri(registry_uri)
-
-try:
-    uuid = json.loads(
-        dbutils.notebook.entry_point.getDbutils().notebook().getContext().toJson()
-    )["tags"]["jobId"]
-    ddate = str(date.today()).replace("-", "_")
-    uid = f"{uuid}_{ddate}"
-except:
-    uid = "a"
-
-mlflow.set_experiment(f"/Shared//test_training_{uid}")
-print(f"/Shared//test_training_{uid}")
 ### POSSIBLY SET THIS EXPERIMENT URI AS A SECRET
 ### THEN DOWNLOAD FROM THERE THE ARTIFACTS TO CHECK COMPLIANCE!!
-
 ds_name = "ds_test"
 model_name = "test_model"
 seed = 28
 
 logging.info("Training")
+
+
+def set_model_registry():
+    registry_uri = f"databricks://modelregistery:modelregistery"
+    mlflow.set_registry_uri(registry_uri)
+
+    try:
+        uuid = json.loads(
+            dbutils.notebook.entry_point.getDbutils().notebook().getContext().toJson()
+        )["tags"]["jobId"]
+        ddate = str(date.today()).replace("-", "_")
+        uid = f"{uuid}_{ddate}"
+    except:
+        uid = "a"
+
+    mlflow.set_experiment(f"/Shared//test_training_{uid}")
 
 
 def addIdColumn(dataframe, id_column_name):
@@ -142,7 +143,9 @@ def get_feature_store():
     return fs
 
 
-if __name__ == "__main__":
+def execute():
+    # model registry
+    set_model_registry()
     # fs
     fs = get_feature_store()
     # Reading
@@ -195,5 +198,10 @@ if __name__ == "__main__":
 
     # transition_to_staging(model_details.name, model_details.version)
     request_transition_to_staging(model_details.name, model_details.version)
+
+
+if __name__ == "__main__":
+    #
+    execute()
 
     print("Finished Training")
