@@ -47,7 +47,7 @@ setup(
     # Refer to https://packaging.python.org/discussions/install-requires-vs-requirements/
     install_requires=[
         "pandas==1.4.2",
-        "numpy==1.21.5",
+        "numpy>=1.22",
         "databricks-feature-store==0.10.0",
         "mlflow<3,>=2.1",
         "cloudpickle==2.0.0",

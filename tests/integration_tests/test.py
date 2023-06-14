@@ -14,7 +14,7 @@ def test_integration_w_model_registry():
     registry_uri = "test"
     mlflow.set_registry_uri(uri=registry_uri)
 
-    mlflow.set_experiment(f"test_training")
+    mlflow.set_experiment(f"/Shared//test_int_training")
 
     data_args = {
         "x_train": np.array(range(500)).reshape(500, 1),
