@@ -22,6 +22,9 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: staging
+    env:
+      DATABRICKS_HOST: ${{ secrets.DATABRICKS_WORKSPACE }}
+      DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_STAGING_TOKEN }}
     steps:
       - name: Set up Python 3.8
         id: python_setup
@@ -56,11 +59,24 @@ jobs:
           --doctest-modules \
           --junitxml=junit/unittest-${{ matrix.python-version }}.xml
 
-      - uses: actions/checkout@v2
-      - name: Integration Tests
-        id: python_integration_tests
+      - name: Extract branch name
         run: |
-          echo "Running pytest"
-          python -m pytest ${GITHUB_WORKSPACE}/tests/integration_tests \
-          --doctest-modules \
-          --junitxml=junit/unittest-${{ matrix.python-version }}.xml
+          echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
+          echo "${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}"
+        id: extract_branch
+
+      # Deploy code to the prod environment
+      - name: Run integration tests on databricks
+        id: integration_tests
+        run: |
+          json=$(cat $GITHUB_WORKSPACE/jobs/integration_tests_job.json)
+          json=$(echo $json | jq -r ".git_source.git_branch = \"${{ steps.extract_branch.outputs.branch }}\"")
+          echo "$json"
+          JOB_ID=$(databricks jobs create --json "$json" | jq -r '.job_id')
+          databricks jobs run-now --job-id "$JOB_ID"
+          echo "$(python $GITHUB_WORKSPACE/jobs/job_waiter.py "$JOB_ID" >> GITHUB_OUTPUT
+
+      # Fail workflow if integration tests job fail
+      - name: run training pipeline
+        if: ${{ steps.integration_tests.outputs.state == 'FAILED' }}
+        run: exit 1

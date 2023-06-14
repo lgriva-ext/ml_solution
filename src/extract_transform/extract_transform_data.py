@@ -16,7 +16,7 @@ if __name__ == "__main__":
     df = extract_data()
     df_test_schema = df.schema
     try:
-        fs.write_table(name="train_data_raw", df=df, mode="append")
+        fs.write_table(name="train_data_raw", df=df, mode="merge")
     except Exception as e:
         print(e)
         fs.create_table(
@@ -25,4 +25,4 @@ if __name__ == "__main__":
             schema=df_test_schema,
             description="raw test bigmart features",
         )
-        fs.write_table(name="train_data_raw", df=df, mode="append")
+        fs.write_table(name="train_data_raw", df=df, mode="merge")

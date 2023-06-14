@@ -2,9 +2,11 @@
 """_summary_
 """
 import requests
+import os
+import mlflow
+from mlflow.store.artifact.models_artifact_repo import ModelsArtifactRepository
 import logging
 import json
-import os
 
 
 to_stage = json.loads(dbutils.widgets.get("event_message"))["to_stage"]
@@ -20,7 +22,22 @@ def compliance_checks_approved(model_name, model_version):
         model_name (_type_): _description_
         model_version (_type_): _description_
     """
+    # DOWNLOAD MODEL ARTIFACTS
+    # download_model_artifacts(model_name, model_version)
+    # logged_model = f"models:/{model_name}/{model_version}"
+    # loaded_model = mlflow.pyfunc.load_model(logged_model)
+    # run_id = loaded_model.metadata.run_id
+    # CHECK TAGS, METRICS, AMOUNT OF ARTIFACTS, FLAVOR OF MODEL AND SO ON
+    # metrics = mlflow.get_run(run_id=run_id).to_dictionary()["data"]["metrics"]
     return True
+
+
+def download_model_artifacts():
+    mlflow.set_tracking_uri("databricks")
+
+    os.makedirs("model", exist_ok=True)
+    local_path = ModelsArtifactRepository(
+        f'models:/{model_name}/{model_version}').download_artifacts("", dst_path="model")
 
 
 def promote_to_staging(name, version):
