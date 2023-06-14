@@ -12,7 +12,6 @@ def extract_data():
 
 
 if __name__ == "__main__":
-
     df = extract_data()
     df_test_schema = df.schema
     try:

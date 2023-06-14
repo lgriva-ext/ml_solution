@@ -17,7 +17,12 @@ def test_integration_w_model_registry():
 
     mlflow.set_experiment(f"test_training")
 
-    data_args = {"x_train": np.array(range(500)).reshape(500,1), "y_train": np.array(range(500,1000)), "x_val": np.array(range(100)).reshape(100,1), "y_val": np.array(range(500,600))}
+    data_args = {
+        "x_train": np.array(range(500)).reshape(500, 1),
+        "y_train": np.array(range(500, 1000)),
+        "x_val": np.array(range(100)).reshape(100, 1),
+        "y_val": np.array(range(500, 600)),
+    }
     model_name = f"test_a_{datetime.now().strftime('%Y-%m-%d')}"
     train.model_name = model_name
     model_details = train.estimate_model(data_args=data_args)
@@ -25,11 +30,11 @@ def test_integration_w_model_registry():
     assert model_details.current_stage == "None"
 
 
-def test_xx():
+def test_integration_w_feature_store():
     # Check if feature storing some features then will bring me access to they
     fs = feature_store.FeatureStoreClient()
     df = pd.DataFrame(data=[np.array(range(500))], columns=["x"])
-    df.loc[:, "y"] = np.array(range(500,1000)).tolist()
+    df.loc[:, "y"] = np.array(range(500, 1000)).tolist()
     df.reset_index(inplace=True)
     df.rename(columns={"index": "item_id"}, inplace=True)
     df = spark.createDataFrame(df)
@@ -48,3 +53,10 @@ def test_y():
 def test_yy():
     # Check all train.py
     pass
+
+
+if __name__ == "__main__":
+    test_y()
+    test_yy()
+    test_integration_w_model_registry()
+    test_integration_w_feature_store()

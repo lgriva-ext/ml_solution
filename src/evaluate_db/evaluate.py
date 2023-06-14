@@ -37,7 +37,8 @@ def download_model_artifacts():
 
     os.makedirs("model", exist_ok=True)
     local_path = ModelsArtifactRepository(
-        f'models:/{model_name}/{model_version}').download_artifacts("", dst_path="model")
+        f"models:/{model_name}/{model_version}"
+    ).download_artifacts("", dst_path="model")
 
 
 def promote_to_staging(name, version):

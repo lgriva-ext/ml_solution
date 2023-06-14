@@ -211,7 +211,9 @@ def execute():
     df_test = df_test[[c for c in df_test.columns if c != "item_id"]]
 
     df_train, dict_mode, l = preprocess_feat_eng(df_train, config_path)
-    df_test, dict_mode, l = preprocess_feat_eng(df_test, config_path, False, dict_mode, l)
+    df_test, dict_mode, l = preprocess_feat_eng(
+        df_test, config_path, False, dict_mode, l
+    )
 
     df_train = spark.createDataFrame(df_train)
     df_test = spark.createDataFrame(df_test)
