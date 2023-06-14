@@ -1,6 +1,5 @@
 """_summary_
 """
-import pytest
 from datetime import datetime
 import pandas as pd
 import numpy as np
