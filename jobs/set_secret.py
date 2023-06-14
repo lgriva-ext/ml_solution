@@ -20,7 +20,7 @@ resp = requests.get(
 
 encrypted_value = encrypt(json.loads(resp.text)["key"], f"{sys.argv[1]}")
 resp = requests.put(
-    "https://api.github.com/repos/lgriva-ext/ml_solution/actions/secrets/JOB_ID_ACTIVE_PROD_JOB",
+    f"https://api.github.com/repos/lgriva-ext/ml_solution/actions/secrets/{sys.argv[2]}",
     json={
         "encrypted_value": encrypted_value,
         "key_id": json.loads(resp.text)["key_id"],

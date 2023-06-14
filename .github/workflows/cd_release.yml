@@ -38,8 +38,8 @@ jobs:
 
       - name: pip install
         run: |
-          python -m pip install --upgrade pip
-          pip install pynacl
+          python -m pip install --upgrade pip setuptools wheel
+          pip install
 
       - name: install-databricks-cli
         uses: microsoft/install-databricks-cli@v1.0.0
@@ -64,6 +64,15 @@ jobs:
         if: ${{ env.JOB_ID_SECRET != '' }}
         run: python $GITHUB_WORKSPACE/jobs/job_pause.py ${{ secrets.JOB_ID_ACTIVE_PROD_JOB }}
 
+      # Pause previous prod job
+      - name: Pause previous feature refresh prod job
+        env:
+          JOB_ID_SECRET: ${{ secrets.FEATURE_REFRESH_JOB_ID }}
+          DATABRICKS_HOST: ${{ secrets.DATABRICKS_WORKSPACE }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_PROD_TOKEN }}
+        if: ${{ env.JOB_ID_SECRET != '' }}
+        run: python $GITHUB_WORKSPACE/jobs/job_pause.py ${{ secrets.FEATURE_REFRESH_JOB_ID }}
+
       - name: Get tag name
         id: tag_name
         run: |
@@ -72,12 +81,35 @@ jobs:
           version_number="${version_number:1}"
           echo "tag-version=v${version_number}" >> $GITHUB_OUTPUT
 
+      # Get release date
+      - name: Date
+        id: release_date
+        run: |
+          printf -v date '%(%Y-%m-%d)T' -1
+          echo "release-date=${date}" >> $GITHUB_OUTPUT
+
+      # Deploy code to Prod workspace
+      - name: Deploy Code
+        run: |
+          databricks workspace import_dir -o $GITHUB_WORKSPACE /Prod/Release-${{ steps.tag_name.outputs.tag-version }}/${{ steps.release_date.outputs.release-date }}
+
+      # Create dist
+      - name: Create whl
+        env:
+          VERSION: ${${{ steps.tag_name.outputs.tag-version }}:1}
+          BUILD_TAG: "alpha"
+        run: |
+          python setup.py bdist_wheel
+
+      # Deploy code to Prod workspace
+      - name: Deploy dist
+        run: |
+          databricks workspace import_dir -o $GITHUB_WORKSPACE/dist /Prod/Release-${{ steps.tag_name.outputs.tag-version }}/${{ steps.release_date.outputs.release-date }}/dist
+
       # Deploy code to the prod environment
       - name: Deploy to Production
         id: deploy_job
         run: |
-          printf -v date '%(%Y-%m-%d)T' -1
-          databricks workspace import_dir -o $GITHUB_WORKSPACE /Prod/Release-${{ steps.tag_name.outputs.tag-version }}/$date
           json=$(cat $GITHUB_WORKSPACE/jobs/pipeline_job.json)
           json=$(echo $json | jq -r ".git_source.git_tag = \"${{ steps.tag_name.outputs.tag-version }}\"")
           json=$(echo $json | jq -r ".name = \"PROD-pipeline-${{ steps.tag_name.outputs.tag-version }}\"")
@@ -86,11 +118,63 @@ jobs:
           JOB_ID=$(databricks jobs create --json "$json" | jq -r '.job_id')
           echo "job_id=${JOB_ID}" >> $GITHUB_OUTPUT
 
+      # Deploy code to the prod environment
+      - name: Deploy monitoring job
+        id: deploy_monitoring_job
+        run: |
+          json=$(cat $GITHUB_WORKSPACE/jobs/monitoring_job.json)
+          json=$(echo $json | jq -r ".git_source.git_tag = \"${{ steps.tag_name.outputs.tag-version }}\"")
+          json=$(echo $json | jq -r ".name = \"PROD-monitoring-${{ steps.tag_name.outputs.tag-version }}\"")
+          echo "$json"
+          JOB_ID=$(databricks jobs create --json "$json" | jq -r '.job_id')
+          echo "job_id=${JOB_ID}" >> $GITHUB_OUTPUT
+
+      # Deploy code to the prod environment
+      - name: Deploy monitoring data job
+        id: deploy_monitoring_data_job
+        run: |
+          json=$(cat $GITHUB_WORKSPACE/jobs/monitoring_job.json)
+          json=$(echo $json | jq -r ".git_source.git_tag = \"${{ steps.tag_name.outputs.tag-version }}\"")
+          json=$(echo $json | jq -r ".name = \"PROD-monitoring-data-${{ steps.tag_name.outputs.tag-version }}\"")
+          echo "$json"
+          JOB_ID=$(databricks jobs create --json "$json" | jq -r '.job_id')
+          echo "job_id=${JOB_ID}" >> $GITHUB_OUTPUT
+
+      # Deploy code to the prod environment
+      - name: Deploy features refresh
+        id: deploy_frefresh_job
+        run: |
+          json=$(cat $GITHUB_WORKSPACE/jobs/features_refresh_job.json)
+          json=$(echo $json | jq -r ".git_source.git_tag = \"${{ steps.tag_name.outputs.tag-version }}\"")
+          json=$(echo $json | jq -r ".name = \"PROD-features-refresh-${{ steps.tag_name.outputs.tag-version }}\"")
+          json=$(echo $json | jq -r ".schedule.quartz_cron_expression = \"36 26 8 * * ?\"")
+          echo "$json"
+          JOB_ID=$(databricks jobs create --json "$json" | jq -r '.job_id')
+          echo "job_id=${JOB_ID}" >> $GITHUB_OUTPUT
+
       # Set new secret for prod pipeline id
       - name: Set job_id secret
         env:
           GITHUB_TOKEN: ${{ secrets.MY_GITHUB_SECRET }}
-        run: python $GITHUB_WORKSPACE/jobs/set_secret.py ${{ steps.deploy_job.outputs.job_id }}
+        run: python $GITHUB_WORKSPACE/jobs/set_secret.py ${{ steps.deploy_job.outputs.job_id }} JOB_ID_ACTIVE_PROD_JOB
+
+      # Set new secret for prod monitoring id
+      - name: Set monitoring job_id secret
+        env:
+          GITHUB_TOKEN: ${{ secrets.MY_GITHUB_SECRET }}
+        run: python $GITHUB_WORKSPACE/jobs/set_secret.py ${{ steps.deploy_monitoring_job.outputs.job_id }} MONITORING_JOB_ID
+
+      # Set new secret for prod monitoring id
+      - name: Set monitoring data job_id secret
+        env:
+          GITHUB_TOKEN: ${{ secrets.MY_GITHUB_SECRET }}
+        run: python $GITHUB_WORKSPACE/jobs/set_secret.py ${{ steps.deploy_monitoring_data_job.outputs.job_id }} MONITORING_DATA_JOB_ID
+
+      # Set new secret for feature refresh job
+      - name: Set feature refresh job_id secret
+        env:
+          GITHUB_TOKEN: ${{ secrets.MY_GITHUB_SECRET }}
+        run: python $GITHUB_WORKSPACE/jobs/set_secret.py ${{ steps.deploy_frefresh_job.outputs.job_id }} FEATURE_REFRESH_JOB_ID
 
       # Delete recently created release branch
       - name: Delete release branch

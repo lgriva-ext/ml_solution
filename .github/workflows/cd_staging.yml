@@ -1,0 +1,108 @@
+name: Deploy to Staging Workflow
+
+
+on:
+  push:
+    branches:
+        - "main"
+
+
+jobs:
+    publish_updated_job:
+      runs-on: ubuntu-latest
+      permissions:
+        contents: write
+        issues: write
+        pull-requests: write
+        deployments: write
+        actions: write
+      environment:
+        name: staging
+      env:
+        DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_STAGING_TOKEN }}
+        DATABRICKS_CLUSTER_ID: ${{ secrets.DATABRICKS_CLUSTER_ID }}
+        DATABRICKS_HOST: ${{ secrets.DATABRICKS_WORKSPACE }}
+
+      steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+            fetch-depth: 0
+
+      - name: setup python
+        uses: actions/setup-python@v3
+        with:
+          python-version: "3.8"
+
+      - name: pip install
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          pip install
+
+      - name: install-databricks-cli
+        uses: microsoft/install-databricks-cli@v1.0.0
+
+      - name: Extract branch name
+        run: |
+          echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
+          echo "${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}"
+        id: extract_branch
+
+      # Deploy code to the staging environment
+      - name: Deploying
+        run: |
+          echo "Deploying code to production..."
+
+      # Pause previous prod job
+      - name: Pause previous prod job
+        env:
+          JOB_ID_SECRET: ${{ secrets.JOB_ID_ACTIVE_STAGING_JOB }}
+          DATABRICKS_HOST: ${{ secrets.DATABRICKS_WORKSPACE }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_PROD_TOKEN }}
+        if: ${{ env.JOB_ID_SECRET != '' }}
+        run: python $GITHUB_WORKSPACE/jobs/job_pause.py ${{ secrets.JOB_ID_ACTIVE_STAGING_JOB }}
+
+      # Get release date
+      - name: Date
+        id: release_date
+        run: |
+          printf -v date '%(%Y-%m-%d)T' -1
+          echo "release-date=${date}" >> $GITHUB_OUTPUT
+
+      # Deploy code to Prod workspace
+      - name: Deploy Code
+        run: |
+          databricks workspace import_dir -o $GITHUB_WORKSPACE /Staging/${{ steps.release_date.outputs.release-date }}
+
+      # Create dist
+      - name: Create whl
+        env:
+          VERSION: ${${{ steps.tag_name.outputs.tag-version }}:1}
+          BUILD_TAG: "beta"
+        run: |
+          python setup.py bdist_wheel
+
+      # Deploy code to Prod workspace
+      - name: Deploy dist
+        run: |
+          databricks workspace import_dir -o $GITHUB_WORKSPACE/dist /Staging/${{ steps.release_date.outputs.release-date }}/dist
+
+      # Deploy code to the prod environment
+      - name: Deploy to Staging
+        id: deploy_job
+        run: |
+          json=$(cat $GITHUB_WORKSPACE/jobs/pipeline_job_qa.json)
+          json=$(echo $json | jq -r ".git_source.git_branch = \"${{ steps.extract_branch.outputs.branch }}\"")
+          json=$(echo $json | jq -r ".name = \"STAGING-pipeline-${{ steps.release_date.outputs.release-date }}\"")
+          json=$(echo $json | jq -r ".schedule.quartz_cron_expression = \"36 26 10 * * ?\"")
+          echo "$json"
+          JOB_ID=$(databricks jobs create --json "$json" | jq -r '.job_id')
+          echo "job_id=${JOB_ID}" >> $GITHUB_OUTPUT
+
+      # Set new secret for prod pipeline id
+      - name: Set job_id secret
+        env:
+          GITHUB_TOKEN: ${{ secrets.MY_GITHUB_SECRET }}
+        run: python $GITHUB_WORKSPACE/jobs/set_secret.py ${{ steps.deploy_job.outputs.job_id }} JOB_ID_ACTIVE_STAGING_JOB
+
+    #build_and_push_new_tag:
