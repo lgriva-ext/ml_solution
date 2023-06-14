@@ -12,7 +12,7 @@ from databricks import feature_store
 def test_integration_w_model_registry():
     # Check if registering a model, then will bring me access to it
     #registry_uri = "test"
-    mlflow.set_registry_uri()
+    #mlflow.set_registry_uri()
 
     mlflow.set_experiment(f"/Shared//test_int_training")
 
