@@ -36,8 +36,8 @@ def test_integration_w_feature_store():
     df.loc[:, "y"] = np.array(range(500, 1000)).tolist()
     df.reset_index(inplace=True)
     df.rename(columns={"index": "item_id"}, inplace=True)
-    df = spark.createDataFrame(df)
-    pre_process.write_preprocessed_data_to_fs(fs, "test", df)
+    df_s = spark.createDataFrame(df)
+    pre_process.write_preprocessed_data_to_fs(fs, "test", df_s, "merge")
     dff = fs.read_table("test").toPandas()
     assert dff.shape == df.shape
     for c in df.columns:

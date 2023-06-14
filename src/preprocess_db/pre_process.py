@@ -188,7 +188,7 @@ def preprocess_feat_eng(df, config_path, train=True, dict_mode=None, cuts=None):
     return df, dict_mode, l
 
 
-def write_preprocessed_data_to_fs(fs, name, data, uid=""):
+def write_preprocessed_data_to_fs(fs, name, data, mode, uid=""):
     schema = data.schema
     fs.create_table(
         name=name + uid,
@@ -197,7 +197,7 @@ def write_preprocessed_data_to_fs(fs, name, data, uid=""):
         schema=schema,
         description="raw train bigmart features",
     )
-    fs.write_table(name=name + uid, df=data, mode="overwrite")
+    fs.write_table(name=name + uid, df=data, mode=mode)
 
 
 def execute():
@@ -227,8 +227,8 @@ def execute():
     ddate = str(date.today()).replace("-", "_")
     uid = f"{uuid}_{ddate}"
 
-    write_preprocessed_data_to_fs(fs, "train_data_preprocessed_", df_train, uid)
-    write_preprocessed_data_to_fs(fs, "test_data_preprocessed_", df_test, uid)
+    write_preprocessed_data_to_fs(fs, "train_data_preprocessed_", df_train, "overwrite", uid)
+    write_preprocessed_data_to_fs(fs, "test_data_preprocessed_", df_test, "overwrite", uid)
 
 
 if __name__ == "__main__":
