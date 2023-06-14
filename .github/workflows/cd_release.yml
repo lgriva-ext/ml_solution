@@ -78,6 +78,7 @@ jobs:
           version_number=$(git describe --tags `git rev-list --tags --max-count=1`)
           version_number=$(echo $version_number | tr -d ' ')
           version_number="${version_number:1}"
+          echo "version-number=${version_number}" >> $GITHUB_OUTPUT
           echo "tag-version=v${version_number}" >> $GITHUB_OUTPUT
 
       # Get release date
@@ -95,7 +96,7 @@ jobs:
       # Create dist
       - name: Create whl
         env:
-          VERSION: ${${{ steps.tag_name.outputs.tag-version }}:1}
+          VERSION: ${{ steps.tag_name.outputs.version-number }}
           BUILD_TAG: "alpha"
         run: |
           python setup.py bdist_wheel

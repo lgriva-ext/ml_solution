@@ -76,7 +76,7 @@ jobs:
       # Create dist
       - name: Create whl
         env:
-          VERSION: ${${{ steps.tag_name.outputs.tag-version }}:1}
+          VERSION: "0.1.0"
           BUILD_TAG: "beta"
         run: |
           python setup.py bdist_wheel
