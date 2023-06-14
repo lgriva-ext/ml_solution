@@ -37,7 +37,6 @@ jobs:
       - name: pip install
         run: |
           python -m pip install --upgrade pip setuptools wheel
-          pip install
 
       - name: install-databricks-cli
         uses: microsoft/install-databricks-cli@v1.0.0
