@@ -32,7 +32,7 @@ def test_integration_w_model_registry():
 def test_integration_w_feature_store():
     # Check if feature storing some features then will bring me access to they
     fs = feature_store.FeatureStoreClient()
-    df = pd.DataFrame(data=[np.array(range(500))], columns=["x"])
+    df = pd.DataFrame(data=np.array(range(500)).tolist(), columns=["x"])
     df.loc[:, "y"] = np.array(range(500, 1000)).tolist()
     df.reset_index(inplace=True)
     df.rename(columns={"index": "item_id"}, inplace=True)
