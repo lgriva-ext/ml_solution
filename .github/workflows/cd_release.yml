@@ -142,16 +142,16 @@ jobs:
           echo "job_id=${JOB_ID}" >> $GITHUB_OUTPUT
 
       # Deploy code to the prod environment
-      - name: Deploy features refresh
-        id: deploy_frefresh_job
-        run: |
-          json=$(cat $GITHUB_WORKSPACE/jobs/features_refresh_job.json)
-          json=$(echo $json | jq -r ".git_source.git_tag = \"${{ steps.tag_name.outputs.tag-version }}\"")
-          json=$(echo $json | jq -r ".name = \"PROD-features-refresh-${{ steps.tag_name.outputs.tag-version }}\"")
-          json=$(echo $json | jq -r ".schedule.quartz_cron_expression = \"36 26 8 * * ?\"")
-          echo "$json"
-          JOB_ID=$(databricks jobs create --json "$json" | jq -r '.job_id')
-          echo "job_id=${JOB_ID}" >> $GITHUB_OUTPUT
+      # - name: Deploy features refresh
+      #  id: deploy_frefresh_job
+      #  run: |
+      #    json=$(cat $GITHUB_WORKSPACE/jobs/features_refresh_job.json)
+      #    json=$(echo $json | jq -r ".git_source.git_tag = \"${{ steps.tag_name.outputs.tag-version }}\"")
+      #    json=$(echo $json | jq -r ".name = \"PROD-features-refresh-${{ steps.tag_name.outputs.tag-version }}\"")
+      #    json=$(echo $json | jq -r ".schedule.quartz_cron_expression = \"36 26 8 * * ?\"")
+      #    echo "$json"
+      #    JOB_ID=$(databricks jobs create --json "$json" | jq -r '.job_id')
+      #    echo "job_id=${JOB_ID}" >> $GITHUB_OUTPUT
 
       # Set new secret for prod pipeline id
       - name: Set job_id secret
@@ -172,10 +172,10 @@ jobs:
         run: python $GITHUB_WORKSPACE/jobs/set_secret.py ${{ steps.deploy_monitoring_data_job.outputs.job_id }} MONITORING_DATA_JOB_ID
 
       # Set new secret for feature refresh job
-      - name: Set feature refresh job_id secret
-        env:
-          GITHUB_TOKEN: ${{ secrets.MY_GITHUB_SECRET }}
-        run: python $GITHUB_WORKSPACE/jobs/set_secret.py ${{ steps.deploy_frefresh_job.outputs.job_id }} FEATURE_REFRESH_JOB_ID
+      # - name: Set feature refresh job_id secret
+      #  env:
+      #    GITHUB_TOKEN: ${{ secrets.MY_GITHUB_SECRET }}
+      #  run: python $GITHUB_WORKSPACE/jobs/set_secret.py ${{ steps.deploy_frefresh_job.outputs.job_id }} FEATURE_REFRESH_JOB_ID
 
       # Delete recently created release branch
       - name: Delete release branch
