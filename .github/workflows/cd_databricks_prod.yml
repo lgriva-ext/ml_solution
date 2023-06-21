@@ -37,7 +37,8 @@ jobs:
           id: create_release
           uses: ncipollo/release-action@v1
           env:
-            GITHUB_TOKEN: ${{ secrets.MY_GITHUB_SECRET }}
+            #GITHUB_TOKEN: ${{ secrets.MY_GITHUB_SECRET }}
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           with:
             name: Release ${{ steps.tag_name.outputs.tag-version }}
 
