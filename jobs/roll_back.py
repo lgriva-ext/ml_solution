@@ -28,7 +28,7 @@ def update_ep(name, version):
         "Content-Type": "application/json",
     }
     resp = requests.post(
-        f"{os.getenv('PROD_ENV_HOST')}api/2.0/serving-endpoints",
+        f"{os.getenv('PROD_ENV_HOST')}/api/2.0/serving-endpoints",
         json=data,
         headers=headers,
     )
@@ -39,7 +39,7 @@ def update_ep(name, version):
     if resp.status_code == 400:
         if json.loads(resp.text)["error_code"] == "RESOURCE_ALREADY_EXISTS":
             resp = requests.put(
-                f"{os.getenv('PROD_ENV_HOST')}api/2.0/serving-endpoints/{endpoint_name}/config",
+                f"{os.getenv('PROD_ENV_HOST')}/api/2.0/serving-endpoints/{endpoint_name}/config",
                 json=config,
                 headers=headers,
             )
