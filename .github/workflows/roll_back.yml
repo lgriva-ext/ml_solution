@@ -1,0 +1,43 @@
+name: Roll Back Current Production Model
+
+
+on:
+  workflow_dispatch:
+
+
+jobs:
+    roll_back:
+      name: Roll Back
+      permissions:
+        contents: write
+        issues: write
+        pull-requests: write
+        deployments: write
+        actions: write
+      runs-on: ubuntu-latest
+      environment: prod
+      env:
+        MODEL_REGISTRY_TOKEN: ${{ secrets.DATABRICKS_MODEL_REGISTRY_TOKEN }}
+        PROD_ENV_HOST: ${{ secrets.DATABRICKS_WORKSPACE }}
+        PROD_ENV_TOKEN: ${{ secrets.DATABRICKS_PROD_TOKEN }}
+        MODEL_REGISTRY_HOST: ${{ secrets.DATABRICKS_MODEL_REGISTRY_WORKSPACE }}
+
+      steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: setup python
+        uses: actions/setup-python@v3
+        with:
+          python-version: "3.8"
+
+      - name: get model name
+        id: get_model_name
+        run: |
+          model_name=$(cat $GITHUB_WORKSPACE/jobs/current_model.json | jq -r '.current_model_name'))
+          echo "model-name=${model_name}" >> $GITHUB_OUTPUT
+
+      - name: run roll back script
+        run: python $GITHUB_WORKSPACE/jobs/roll_back.py ${{ steps.get_model_name.outputs.model-name }}
