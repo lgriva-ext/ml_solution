@@ -36,7 +36,7 @@ jobs:
       - name: get model name
         id: get_model_name
         run: |
-          model_name=$(cat $GITHUB_WORKSPACE/jobs/current_model.json | jq -r '.current_model_name'))
+          model_name=$(cat $GITHUB_WORKSPACE/jobs/current_model.json | jq -r '.current_model_name')
           echo "model-name=${model_name}" >> $GITHUB_OUTPUT
 
       - name: run roll back script
