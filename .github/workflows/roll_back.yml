@@ -34,7 +34,7 @@ jobs:
           python-version: "3.8"
 
       - name: install libraries
-        run: python -m pip install requests json
+        run: python -m pip install requests
 
       - name: get model name
         id: get_model_name
