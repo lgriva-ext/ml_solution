@@ -1,10 +1,14 @@
 import json
 import os
+import requests
+import datetime
 from datetime import date
 import pandas as pd
 import logging
 from databricks import feature_store
-from pyspark.sql.functions import monotonically_increasing_id
+from pyspark.sql.functions import monotonically_increasing_id, lit
+from base64 import b64encode
+from nacl import encoding, public
 
 
 ds_name = "ds_test"
@@ -22,6 +26,13 @@ def addIdColumn(dataframe, id_column_name):
     columns = dataframe.columns
     new_df = dataframe.withColumn(id_column_name, monotonically_increasing_id())
     return new_df[[id_column_name] + columns]
+
+
+def add_date_column(df):
+    date_feat = datetime.datetime.strftime(date.today(), "%Y-%m-%d")
+    columns = df.columns
+    new_df = df.withColumn("date_feat", lit(date_feat))
+    return new_df[["date_feat"] + columns], date_feat
 
 
 def switcher(x, cuts):
@@ -233,6 +244,40 @@ def execute():
     write_preprocessed_data_to_fs(
         fs, "test_data_preprocessed_", df_test, "overwrite", uid
     )
+
+    df_train, date_feat = add_date_column(df_train)
+    df_test, date_feat = add_date_column(df_test)
+    write_preprocessed_data_to_fs(
+        fs, "train_data_preprocessed", df_train, "merge"
+    )
+    write_preprocessed_data_to_fs(
+        fs, "test_data_preprocessed", df_test, "merge"
+    )
+    ### SET CUT DATE AS A SECRET OR GITHUB VARIABLE ###
+
+    resp = requests.get(
+        "https://api.github.com/repos/lgriva-ext/ml_solution/actions/secrets/public-key",
+        headers={"Authorization": f'Bearer {dbutils.secrets.get("github", "github-token")}'},
+    )
+
+    encrypted_value = encrypt(json.loads(resp.text)["key"], f"{date_feat}")
+    resp = requests.put(
+        "https://api.github.com/repos/lgriva-ext/ml_solution/actions/secrets/CUT_DATE",
+        json={
+            "encrypted_value": encrypted_value,
+            "key_id": json.loads(resp.text)["key_id"],
+        },
+        headers={"Authorization": f'Bearer {dbutils.secrets.get("github", "github-token")}'},
+    )
+
+    print(resp.status_code)
+
+
+def encrypt(public_key: str, secret_value: str):
+    public_key = public.PublicKey(public_key.encode("utf-8"), encoding.Base64Encoder())
+    sealed_box = public.SealedBox(public_key)
+    encrypted = sealed_box.encrypt(secret_value.encode("utf-8"))
+    return b64encode(encrypted).decode("utf-8")
 
 
 if __name__ == "__main__":

@@ -10,6 +10,13 @@
                 "source": "GIT"
             },
             "existing_cluster_id": "0531-173223-2msbjz85",
+            "libraries": [
+                {
+                    "pypi": {
+                        "package": "evidently"
+                    }
+                }
+            ],
             "timeout_seconds": 0,
             "email_notifications": {},
             "notification_settings": {

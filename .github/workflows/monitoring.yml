@@ -100,7 +100,7 @@ jobs:
     - name: run monitoring job
       id: run_monitoring_job
       run: |
-        databricks jobs run-now --job-id ${{ secrets.MONITORING_DATA_JOB_ID }}
+        databricks jobs run-now --job-id ${{ secrets.MONITORING_DATA_JOB_ID }} --python-params ${{ secrets.CUT_DATE }}
         echo "$(python $GITHUB_WORKSPACE/jobs/job_waiter.py ${{ secrets.MONITORING_DATA_JOB_ID }})" >> GITHUB_OUTPUT
 
     - name: run training pipeline
