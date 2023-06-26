@@ -49,7 +49,6 @@ def update_ep(name, version):
 
 
 def delete_current_production_model(version):
-
     job_payload = {
         "name": name,
         "version": version,
@@ -58,9 +57,7 @@ def delete_current_production_model(version):
     resp = requests.delete(
         f'{os.getenv("MODEL_REGISTRY_HOST")}api/2.0/mlflow/model-versions/delete',
         json=job_payload,
-        headers={
-            "Authorization": f'Bearer {os.getenv("MODEL_REGISTRY_TOKEN")}'
-        },
+        headers={"Authorization": f'Bearer {os.getenv("MODEL_REGISTRY_TOKEN")}'},
     )
 
     print(resp.status_code)
@@ -76,9 +73,7 @@ def get_previous_prod_model():
     resp = requests.post(
         f'{os.getenv("MODEL_REGISTRY_HOST")}api/2.0/mlflow/registered-models/get-latest-versions',
         json=job_payload,
-        headers={
-            "Authorization": f'Bearer {os.getenv("MODEL_REGISTRY_TOKEN")}'
-        },
+        headers={"Authorization": f'Bearer {os.getenv("MODEL_REGISTRY_TOKEN")}'},
     )
 
     version_older = json.loads(resp.text)["model_versions"][0]["version"]
@@ -90,9 +85,7 @@ def get_previous_prod_model():
     resp = requests.post(
         f'{os.getenv("MODEL_REGISTRY_HOST")}api/2.0/mlflow/registered-models/get-latest-versions',
         json=job_payload,
-        headers={
-            "Authorization": f'Bearer {os.getenv("MODEL_REGISTRY_TOKEN")}'
-        },
+        headers={"Authorization": f'Bearer {os.getenv("MODEL_REGISTRY_TOKEN")}'},
     )
 
     json_resp = json.loads(resp.text)
@@ -116,16 +109,13 @@ def promote_to_prod_last_prod_model(version):
     resp = requests.post(
         f'{os.getenv("MODEL_REGISTRY_HOST")}api/2.0/mlflow/databricks/model-versions/transition-stage',
         json=job_payload,
-        headers={
-            "Authorization": f'Bearer {os.getenv("MODEL_REGISTRY_TOKEN")}'
-        },
+        headers={"Authorization": f'Bearer {os.getenv("MODEL_REGISTRY_TOKEN")}'},
     )
 
     print(resp.status_code)
 
 
 def archive_current_production_model(version):
-
     job_payload = {
         "name": name,
         "version": version,
@@ -137,9 +127,7 @@ def archive_current_production_model(version):
     resp = requests.post(
         f'{os.getenv("MODEL_REGISTRY_HOST")}api/2.0/mlflow/databricks/model-versions/transition-stage',
         json=job_payload,
-        headers={
-            "Authorization": f'Bearer {os.getenv("MODEL_REGISTRY_TOKEN")}'
-        },
+        headers={"Authorization": f'Bearer {os.getenv("MODEL_REGISTRY_TOKEN")}'},
     )
     print(resp.status_code)
 

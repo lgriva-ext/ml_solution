@@ -227,8 +227,12 @@ def execute():
     ddate = str(date.today()).replace("-", "_")
     uid = f"{uuid}_{ddate}"
 
-    write_preprocessed_data_to_fs(fs, "train_data_preprocessed_", df_train, "overwrite", uid)
-    write_preprocessed_data_to_fs(fs, "test_data_preprocessed_", df_test, "overwrite", uid)
+    write_preprocessed_data_to_fs(
+        fs, "train_data_preprocessed_", df_train, "overwrite", uid
+    )
+    write_preprocessed_data_to_fs(
+        fs, "test_data_preprocessed_", df_test, "overwrite", uid
+    )
 
 
 if __name__ == "__main__":

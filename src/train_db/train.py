@@ -12,6 +12,7 @@ import logging
 import mlflow
 from databricks import feature_store
 from pyspark.sql.functions import monotonically_increasing_id
+import argparse
 
 
 ### POSSIBLY SET THIS EXPERIMENT URI AS A SECRET
@@ -21,6 +22,19 @@ model_name = "test_model"
 seed = 28
 
 logging.info("Training")
+
+
+def get_arguments():
+    parser = argparse.ArgumentParser(description="reads default arguments")
+    parser.add_argument(
+        "--run_id", metavar="run_id", type=str, help="Databricks run id"
+    )
+    parser.add_argument(
+        "--job_id", metavar="job_id", type=str, help="Databricks job id"
+    )
+    args = parser.parse_args()
+
+    return args.run_id, args.job_id
 
 
 def set_model_registry():
@@ -37,6 +51,8 @@ def set_model_registry():
         uid = "a"
 
     mlflow.set_experiment(f"/Shared//test_training_{uid}")
+
+    return uid
 
 
 def addIdColumn(dataframe, id_column_name):
@@ -110,6 +126,14 @@ def estimate_model(data_args):
 
         run_id = mlflow.active_run().info.run_id
 
+        tags = {
+            "GIT_SHA": git_sha,
+            "MLFLOW_RUN_ID": run_id,
+            "DBR_JOB_ID": job_id,
+            "DBR_RUN_ID": run_id,
+        }
+        mlflow.set_tags(tags)
+
     # Predicción del modelo ajustado para el conjunto de validación
     y_pred_val = model.predict(x_val)
     y_pred_train = model.predict(x_train)
@@ -145,7 +169,7 @@ def get_feature_store():
 
 def execute():
     # model registry
-    set_model_registry()
+    uid = set_model_registry()
     # fs
     fs = get_feature_store()
     # Reading
@@ -203,5 +227,7 @@ def execute():
 if __name__ == "__main__":
     #
     execute()
+    run_id, job_id = get_arguments()
+    git_sha = os.environ["GIT_SHA"]
 
-    print("Finished Training")
+    print("Finished Training", f"{run_id}", f"{job_id}", f"{git_sha}")

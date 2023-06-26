@@ -21,7 +21,7 @@ jobs:
       environment:
         name: prod
       env:
-        DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_STAGING_TOKEN }}
+        DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_PROD_TOKEN }}
         DATABRICKS_CLUSTER_ID: ${{ secrets.DATABRICKS_CLUSTER_ID }}
         DATABRICKS_HOST: ${{ secrets.DATABRICKS_WORKSPACE }}
 
@@ -106,6 +106,18 @@ jobs:
       - name: Deploy dist
         run: |
           databricks workspace import_dir -o $GITHUB_WORKSPACE/dist /Prod/Release-${{ steps.tag_name.outputs.tag-version }}/${{ steps.release_date.outputs.release-date }}/dist
+
+      # Set git_sha as environmental variable in production job
+      - name: Set GIT_SHA
+        run: echo "GIT_SHA=${{ github.sha }}" >> $GITHUB_ENV
+
+      # Update cluster conf
+      - name: Update cluster conf
+        run: |
+          json=$(cat $GITHUB_WORKSPACE/jobs/cluster_conf.json)
+          json=$(echo $json | jq -r ".spark_env_vars.GIT_SHA = \"${{ env.GIT_SHA }}\"")
+          json=$(echo $json | jq -r ".cluster_id = \"${{ secrets.DATABRICKS_PROD_CLUSTER_ID }}\"")
+          databricks clusters edit --json "$json"
 
       # Deploy code to the prod environment
       - name: Deploy to Production

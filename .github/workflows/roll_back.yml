@@ -42,5 +42,9 @@ jobs:
           model_name=$(cat $GITHUB_WORKSPACE/jobs/current_model.json | jq -r '.current_model_name')
           echo "model-name=${model_name}" >> $GITHUB_OUTPUT
 
+      # Delete bad production model deployed and re-productionize previous model that works
+      # in a production environment
       - name: run roll back script
         run: python $GITHUB_WORKSPACE/jobs/roll_back.py ${{ steps.get_model_name.outputs.model-name }}
+
+      # Possibly re-deploy production code of previous version

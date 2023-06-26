@@ -12,7 +12,13 @@
                 "task_key": "preprocess",
                 "spark_python_task": {
                     "python_file": "src/preprocess_db/pre_process.py",
-                    "source": "GIT"
+                    "source": "GIT",
+                    "parameters": [
+                        "--job_id",
+                        "{{job_id}}",
+                        "--run_id",
+                        "{{parent_run_id}}"
+                    ]
                 },
                 "existing_cluster_id": "0531-173223-2msbjz85",
                 "timeout_seconds": 0,
@@ -32,7 +38,13 @@
                 ],
                 "spark_python_task": {
                     "python_file": "src/train_db/train.py",
-                    "source": "GIT"
+                    "source": "GIT",
+                    "parameters": [
+                        "--job_id",
+                        "{{job_id}}",
+                        "--run_id",
+                        "{{parent_run_id}}"
+                    ]
                 },
                 "existing_cluster_id": "0531-173223-2msbjz85",
                 "timeout_seconds": 0,
