@@ -46,9 +46,8 @@ jobs:
       - name: Generate databricks token
         id: generate-token
         run: |
-          echo "PROD_ENV_TOKEN=$(az account get-access-token \
-            --resource 2ff814a6-3304-4ab8-85cb-cd0e6f879c1d | jq .accessToken -r)" >> $GITHUB_ENV
-          echo "MODEL_REGISTRY_TOKEN=${PROD_ENV_TOKEN} >> $GITHUB_ENV"
+          echo "PROD_ENV_TOKEN=$(az account get-access-token --resource 2ff814a6-3304-4ab8-85cb-cd0e6f879c1d | jq .accessToken -r)" >> $GITHUB_ENV
+          echo "MODEL_REGISTRY_TOKEN=${PROD_ENV_TOKEN}" >> $GITHUB_ENV
 
       - name: get model name
         id: get_model_name
