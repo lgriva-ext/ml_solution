@@ -17,7 +17,7 @@ jobs:
       runs-on: ubuntu-latest
       environment: prod
       env:
-        MODEL_REGISTRY_TOKEN: ${{ secrets.DATABRICKS_MODEL_REGISTRY_TOKEN }}
+      # MODEL_REGISTRY_TOKEN: ${{ secrets.DATABRICKS_MODEL_REGISTRY_TOKEN }}
         PROD_ENV_HOST: ${{ secrets.DATABRICKS_WORKSPACE }}
       # PROD_ENV_TOKEN: ${{ secrets.DATABRICKS_PROD_TOKEN }}
         MODEL_REGISTRY_HOST: ${{ secrets.DATABRICKS_MODEL_REGISTRY_WORKSPACE }}
@@ -48,6 +48,7 @@ jobs:
         run: |
           echo "PROD_ENV_TOKEN=$(az account get-access-token \
             --resource 2ff814a6-3304-4ab8-85cb-cd0e6f879c1d | jq .accessToken -r)" >> $GITHUB_ENV
+          echo "MODEL_REGISTRY_TOKEN=${PROD_ENV_TOKEN} >> $GITHUB_ENV"
 
       - name: get model name
         id: get_model_name

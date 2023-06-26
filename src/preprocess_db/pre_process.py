@@ -201,13 +201,16 @@ def preprocess_feat_eng(df, config_path, train=True, dict_mode=None, cuts=None):
 
 def write_preprocessed_data_to_fs(fs, name, data, mode, uid=""):
     schema = data.schema
-    fs.create_table(
-        name=name + uid,
-        # df=df_train,
-        primary_keys=["item_id"],
-        schema=schema,
-        description="raw train bigmart features",
-    )
+    try:
+        fs.create_table(
+            name=name + uid,
+            # df=df_train,
+            primary_keys=["item_id"],
+            schema=schema,
+            description="raw train bigmart features",
+        )
+    except ValueError as e:
+        print(e)
     fs.write_table(name=name + uid, df=data, mode=mode)
 
 
