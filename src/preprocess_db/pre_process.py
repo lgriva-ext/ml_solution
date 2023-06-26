@@ -251,10 +251,10 @@ def execute():
     df_train, date_feat = add_date_column(df_train)
     df_test, date_feat = add_date_column(df_test)
     write_preprocessed_data_to_fs(
-        fs, "train_data_preprocessed", df_train, "merge"
+        fs, "train_data_preprocessedd", df_train, "overwrite"
     )
     write_preprocessed_data_to_fs(
-        fs, "test_data_preprocessed", df_test, "merge"
+        fs, "test_data_preprocessedd", df_test, "overwrite"
     )
     ### SET CUT DATE AS A SECRET OR GITHUB VARIABLE ###
 
