@@ -36,7 +36,7 @@ jobs:
       - name: install libraries
         run: python -m pip install requests
 
-      # Connect to azure
+            # Connect to azure to use model registry workspace
       - uses: Azure/login@v1
         name: Login to Azure
         with:
@@ -45,14 +45,20 @@ jobs:
       # Set databricks token as environmental variable
       - name: Generate databricks token
         id: generate-token
-        #run: |
-        #  echo "PROD_ENV_TOKEN=$(az account get-access-token --resource 2ff814a6-3304-4ab8-85cb-cd0e6f879c1d | jq .accessToken -r)" >> $GITHUB_ENV
-        #  echo "MODEL_REGISTRY_TOKEN=${{ env.PROD_ENV_TOKEN }}" >> $GITHUB_ENV
         run: |
-          echo "a=hola" >> $GITHUB_ENV
-          echo "aa=$a" >> $GITHUB_ENV
-          echo  "$a"
-          echo  "$aa"
+          echo "MODEL_REGISTRY_TOKEN=$(az account get-access-token --resource 2ff814a6-3304-4ab8-85cb-cd0e6f879c1d | jq .accessToken -r)" >> $GITHUB_ENV
+
+      # Connect to azure to use databricks production workspace
+      - uses: Azure/login@v1
+        name: Login to Azure
+        with:
+          creds: '{"clientId":"${{ secrets.CLIENT_ID }}","clientSecret":"${{ secrets.CLIENT_SECRET }}","subscriptionId":"${{ secrets.SUBSCRIPTION_ID }}","tenantId":"${{ secrets.TENANT_ID }}"}'
+
+      # Set databricks token as environmental variable
+      - name: Generate databricks token
+        id: generate-token
+        run: |
+          echo "PROD_ENV_TOKEN=$(az account get-access-token --resource 2ff814a6-3304-4ab8-85cb-cd0e6f879c1d | jq .accessToken -r)" >> $GITHUB_ENV
 
       - name: get model name
         id: get_model_name
