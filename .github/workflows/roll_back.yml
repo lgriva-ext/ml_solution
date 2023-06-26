@@ -50,9 +50,9 @@ jobs:
         #  echo "MODEL_REGISTRY_TOKEN=${{ env.PROD_ENV_TOKEN }}" >> $GITHUB_ENV
         run: |
           echo "a=hola" >> $GITHUB_ENV
-          echo "aa=${{ env.a }}" >> $GITHUB_ENV
-          echo  "${{ env.a }}"
-          echo  "${{ env.aa }}"
+          echo "aa=$env.a" >> $GITHUB_ENV
+          echo  "$env.a"
+          echo  "$env.aa"
 
       - name: get model name
         id: get_model_name
