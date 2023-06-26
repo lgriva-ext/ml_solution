@@ -51,8 +51,8 @@ jobs:
         run: |
           echo "a=hola" >> $GITHUB_ENV
           echo "aa=$env.a" >> $GITHUB_ENV
-          echo  "$env.a"
-          echo  "$env.aa"
+          echo  "${env.a}"
+          echo  "${env.aa}"
 
       - name: get model name
         id: get_model_name
