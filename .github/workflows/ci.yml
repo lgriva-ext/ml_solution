@@ -24,7 +24,8 @@ jobs:
       name: staging
     env:
       DATABRICKS_HOST: ${{ secrets.DATABRICKS_WORKSPACE }}
-      DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_STAGING_TOKEN }}
+    # DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_STAGING_TOKEN }}
+
     steps:
       - name: Set up Python 3.8
         id: python_setup
@@ -64,6 +65,19 @@ jobs:
           echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
           echo "${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}"
         id: extract_branch
+
+      # Connect to azure
+      - uses: Azure/login@v1
+        name: Login to Azure
+        with:
+          creds: '{"clientId":"${{ secrets.CLIENT_ID }}","clientSecret":"${{ secrets.CLIENT_SECRET }}","subscriptionId":"${{ secrets.SUBSCRIPTION_ID }}","tenantId":"${{ secrets.TENANT_ID }}"}'
+
+      # Set databricks token as environmental variable
+      - name: Generate databricks token
+        id: generate-token
+        run: |
+          echo "DATABRICKS_TOKEN=$(az account get-access-token \
+            --resource 2ff814a6-3304-4ab8-85cb-cd0e6f879c1d | jq .accessToken -r)" >> $GITHUB_ENV
 
       # Deploy code to the prod environment
       - name: Run integration tests on databricks
