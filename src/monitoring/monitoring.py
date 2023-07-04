@@ -91,7 +91,8 @@ if __name__ == "__main__":
         #start_date=datetime.datetime.now(),
         limit_train_date=limit_train_date)
 
-    drift_detected = compute_drift(df_train_data, df_new_data)
+    if df_new_data.shape[0] >= 1000:
+        drift_detected = compute_drift(df_train_data, df_new_data)
 
-    if drift_detected:
-        sys.exit(1)
+        if drift_detected:
+            sys.exit(1)
