@@ -81,10 +81,15 @@ def get_data(limit_train_date, start_date=None):
 
 
 if __name__ == "__main__":
-    train_date = sys.argv[1] #os.environ["train_date"]
+    #train_date = sys.argv[1]
+    train_date = os.environ["train_date"]
+    try:
+        limit_train_date = datetime.datetime.strftime(train_date, "%Y-%m-%d")
+    except:
+        limit_train_date = str(train_date)[:10]
     df_train_data, df_new_data = get_data(
         #start_date=datetime.datetime.now(),
-        limit_train_date=datetime.datetime.strftime(train_date, "%Y-%m-%d"))
+        limit_train_date=limit_train_date)
 
     drift_detected = compute_drift(df_train_data, df_new_data)
 

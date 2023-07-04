@@ -99,10 +99,22 @@ jobs:
         echo "DATABRICKS_TOKEN=$(az account get-access-token \
           --resource 2ff814a6-3304-4ab8-85cb-cd0e6f879c1d | jq .accessToken -r)" >> $GITHUB_ENV
 
+    # Set git_sha as environmental variable in production job
+    - name: Set cut date
+      run: echo "train_date=${{ secrets.CUT_DATE }}" >> $GITHUB_ENV
+
+    # Update cluster conf
+    - name: Update cluster conf
+      run: |
+        json=$(cat $GITHUB_WORKSPACE/jobs/cluster_conf.json)
+        json=$(echo $json | jq -r ".spark_env_vars.train_date = \"${{ env.train_date }}\"")
+        json=$(echo $json | jq -r ".cluster_id = \"${{ secrets.DATABRICKS_PROD_CLUSTER_ID }}\"")
+        databricks clusters edit --json "$json"
+
     - name: run monitoring job
       id: run_monitoring_job
       run: |
-        databricks jobs run-now --job-id ${{ secrets.MONITORING_DATA_JOB_ID }} --python-params ${{ secrets.CUT_DATE }}
+        databricks jobs run-now --job-id ${{ secrets.MONITORING_DATA_JOB_ID }}
         echo "$(python $GITHUB_WORKSPACE/jobs/job_waiter.py ${{ secrets.MONITORING_DATA_JOB_ID }})" >> GITHUB_OUTPUT
 
     - name: run training pipeline
