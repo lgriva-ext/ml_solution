@@ -101,7 +101,7 @@ def request_transition_to_staging(name, version):
     print(resp.status_code)
 
 
-def estimate_model(data_args):
+def estimate_model(data_args, ids_dict):
     """_summary_
 
     Args:
@@ -127,10 +127,10 @@ def estimate_model(data_args):
         run_id = mlflow.active_run().info.run_id
 
         tags = {
-            "GIT_SHA": git_sha,
+            "GIT_SHA": ids_dict["git_sha"],
             "MLFLOW_RUN_ID": run_id,
-            "DBR_JOB_ID": job_id,
-            "DBR_RUN_ID": run_id,
+            "DBR_JOB_ID": ids_dict["job_id"],
+            "DBR_RUN_ID": ids_dict["run_id"],
         }
         mlflow.set_tags(tags)
 
@@ -167,7 +167,7 @@ def get_feature_store():
     return fs
 
 
-def execute():
+def execute(ids_dict):
     # model registry
     uid = set_model_registry()
     # fs
@@ -198,7 +198,7 @@ def execute():
     data_args["y_train"] = y_train
     data_args["x_val"] = x_val
     data_args["y_val"] = y_val
-    model_details = estimate_model(data_args=data_args)
+    model_details = estimate_model(data_args=data_args, ids_dict=ids_dict)
 
     df_train = addIdColumn(spark.createDataFrame(df_trained), "item_id")
     df_train_schema = df_train.schema
@@ -226,8 +226,12 @@ def execute():
 
 if __name__ == "__main__":
     #
-    execute()
     run_id, job_id = get_arguments()
     git_sha = os.environ["GIT_SHA"]
+    ids_dict = {"run_id": run_id, "job_id": job_id, "git_sha": git_sha}
+    execute(ids_dict)
+
+    # UPDATE MEATADATA DATABASE WITH:
+    # git_sha, run_id, job_id, mlflow_run_id, model_name, model_version, data_version_name
 
     print("Finished Training", f"{run_id}", f"{job_id}", f"{git_sha}")
