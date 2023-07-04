@@ -9,55 +9,55 @@ on:
 
 
 jobs:
-  monitor_metrics:
-    runs-on: ubuntu-latest
-    environment:
-      name: staging
-    env:
-    # DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_STAGING_TOKEN }}
-      DATABRICKS_CLUSTER_ID: ${{ secrets.DATABRICKS_CLUSTER_ID }}
-      DATABRICKS_HOST: ${{ secrets.DATABRICKS_WORKSPACE }}
+#  monitor_metrics:
+#    runs-on: ubuntu-latest
+#    environment:
+#      name: staging
+#    env:
+#    # DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_STAGING_TOKEN }}
+#      DATABRICKS_CLUSTER_ID: ${{ secrets.DATABRICKS_CLUSTER_ID }}
+#      DATABRICKS_HOST: ${{ secrets.DATABRICKS_WORKSPACE }}
 
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
-      with:
-        fetch-depth: 0
+#    steps:
+#    - name: Checkout repository
+#      uses: actions/checkout@v3
+#      with:
+#        fetch-depth: 0
 
-    - name: setup python
-      uses: actions/setup-python@v3
-      with:
-        python-version: "3.8"
+#    - name: setup python
+#      uses: actions/setup-python@v3
+#      with:
+#        python-version: "3.8"
 
-    - name: pip install
-      run: |
-        python -m pip install --upgrade pip setuptools wheel
+#    - name: pip install
+#      run: |
+#        python -m pip install --upgrade pip setuptools wheel
 
-    - name: install-databricks-cli
-      uses: microsoft/install-databricks-cli@v1.0.0
+#    - name: install-databricks-cli
+#      uses: microsoft/install-databricks-cli@v1.0.0
 
-    # Connect to azure
-    - uses: Azure/login@v1
-      name: Login to Azure
-      with:
-        creds: '{"clientId":"${{ secrets.CLIENT_ID }}","clientSecret":"${{ secrets.CLIENT_SECRET }}","subscriptionId":"${{ secrets.SUBSCRIPTION_ID }}","tenantId":"${{ secrets.TENANT_ID }}"}'
+#    # Connect to azure
+#    - uses: Azure/login@v1
+#      name: Login to Azure
+#      with:
+#        creds: '{"clientId":"${{ secrets.CLIENT_ID }}","clientSecret":"${{ secrets.CLIENT_SECRET }}","subscriptionId":"${{ secrets.SUBSCRIPTION_ID }}","tenantId":"${{ secrets.TENANT_ID }}"}'
 
-    # Set databricks token as environmental variable
-    - name: Generate databricks token
-      id: generate-token
-      run: |
-        echo "DATABRICKS_TOKEN=$(az account get-access-token \
-          --resource 2ff814a6-3304-4ab8-85cb-cd0e6f879c1d | jq .accessToken -r)" >> $GITHUB_ENV
+#    # Set databricks token as environmental variable
+#    - name: Generate databricks token
+#      id: generate-token
+#      run: |
+#        echo "DATABRICKS_TOKEN=$(az account get-access-token \
+#          --resource 2ff814a6-3304-4ab8-85cb-cd0e6f879c1d | jq .accessToken -r)" >> $GITHUB_ENV
 
-    - name: run monitoring job
-      id: run_monitoring_job
-      run: |
-        databricks jobs run-now --job-id ${{ secrets.MONITORING_JOB_ID }}
-        echo "$(python $GITHUB_WORKSPACE/jobs/job_waiter.py ${{ secrets.MONITORING_JOB_ID }})" >> GITHUB_OUTPUT
+#    - name: run monitoring job
+#      id: run_monitoring_job
+#      run: |
+#        databricks jobs run-now --job-id ${{ secrets.MONITORING_JOB_ID }}
+#        echo "$(python $GITHUB_WORKSPACE/jobs/job_waiter.py ${{ secrets.MONITORING_JOB_ID }})" >> GITHUB_OUTPUT
 
-    - name: run training pipeline
-      if: ${{ steps.run_monitoring_job.outputs.state == 'FAILED' }}
-      run: databricks jobs run-now --job-id ${{ secrets.JOB_ID_ACTIVE_PROD_JOB }}
+#    - name: run training pipeline
+#      if: ${{ steps.run_monitoring_job.outputs.state == 'FAILED' }}
+#      run: databricks jobs run-now --job-id ${{ secrets.JOB_ID_ACTIVE_PROD_JOB }}
 
   monitor_data:
     runs-on: ubuntu-latest
